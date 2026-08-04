@@ -834,23 +834,13 @@
             <label style="font-weight:600; color:var(--brown-900); font-family:var(--serif); font-size:1.1rem; margin-bottom:10px; display:block;">Add-ons:</label>
             <div style="display:flex; flex-wrap:wrap; gap:10px;">
               <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="filling" onchange="updatePrice()"> Filling (+$10)
+                <input type="checkbox" value="filling" onchange="updatePrice()"> Filling (+$5)
               </label>
               <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="fondant" onchange="updatePrice()"> Fondant (+$20)
-              </label>
-              <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="faux-flowers" onchange="updatePrice()"> Faux Flowers (+$10)
-              </label>
-              <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="fresh-flowers" onchange="updatePrice()"> Fresh Flowers (+$20)
-              </label>
-              <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
-                <input type="checkbox" value="cake-topper" onchange="updatePrice()"> Cake Topper (+$5)
+                <input type="checkbox" value="fondant" onchange="updatePrice()"> Fondant (+$10)
               </label>
             </div>
           </div>
-        </div>
 
         <!-- Price Display -->
         <div class="price-display">
@@ -1055,6 +1045,7 @@
     const cakeAddons = document.getElementById('cake-addons');
     const cupcakeAddons = document.getElementById('cupcake-addons');
     const summaryBox = document.getElementById('summaryBox');
+    const typeSelectContainer = document.getElementById('typeSelect').parentElement;
 
     // Reset
     flavorContainer.style.display = 'none';
@@ -1064,6 +1055,15 @@
     cakeAddons.style.display = 'none';
     cupcakeAddons.style.display = 'none';
     summaryBox.style.display = 'none';
+
+    // Categories that should hide the type dropdown
+    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
+    
+    if (hideTypeCategories.includes(category)) {
+      typeSelectContainer.style.display = 'none';
+    } else {
+      typeSelectContainer.style.display = 'block';
+    }
 
     if (category) {
       document.getElementById('step-category').classList.remove('active');
@@ -1109,184 +1109,188 @@
     updatePrice();
   }
 
-    function updatePrice() {
-      const category = document.getElementById('category').value;
-      const size = document.getElementById('size').value;
-      const flavor = document.getElementById('flavor').value;
-      const typeSelect = document.getElementById('typeSelect');
-      const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
-      const priceDisplay = document.getElementById('priceOutput');
-      const breadFlavorText = document.getElementById('bread-flavor-text');
-      const bagelFlavorText = document.getElementById('bagel-flavor-text');
-      const tierMessage = document.getElementById('tier-message');
-      const summaryBox = document.getElementById('summaryBox');
+  function updatePrice() {
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    const priceDisplay = document.getElementById('priceOutput');
+    const breadFlavorText = document.getElementById('bread-flavor-text');
+    const bagelFlavorText = document.getElementById('bagel-flavor-text');
+    const tierMessage = document.getElementById('tier-message');
+    const summaryBox = document.getElementById('summaryBox');
 
-      // Get all elements that should be hidden for tiered cakes
-      const flavorContainer = document.getElementById('flavor-container');
-      const typeSelectContainer = document.getElementById('typeSelect').parentElement;
-      const cakeAddons = document.getElementById('cake-addons');
-      const cupcakeAddons = document.getElementById('cupcake-addons');
-      const breadFlavorDisplay = document.getElementById('bread-flavor-display');
-      const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
+    // Get all elements that should be hidden for tiered cakes
+    const flavorContainer = document.getElementById('flavor-container');
+    const typeSelectContainer = document.getElementById('typeSelect').parentElement;
+    const cakeAddons = document.getElementById('cake-addons');
+    const cupcakeAddons = document.getElementById('cupcake-addons');
+    const breadFlavorDisplay = document.getElementById('bread-flavor-display');
+    const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
 
-      // Check if tiered cake is selected
-      const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
-
-      if (isTiered) {
-        // HIDE everything except the tier message
-        flavorContainer.style.display = 'none';
-        typeSelectContainer.style.display = 'none';
-        cakeAddons.style.display = 'none';
-        cupcakeAddons.style.display = 'none';
-        breadFlavorDisplay.style.display = 'none';
-        bagelFlavorDisplay.style.display = 'none';
-        tierMessage.style.display = 'block';
-        priceDisplay.textContent = 'Message us';
-        summaryBox.style.display = 'none';
-        return;
-      }
-
-      // Restore visibility for non-tiered selections
-      // Only show flavor container if category requires it
-      if (category === 'cake' || category === 'cupcakes') {
-        flavorContainer.style.display = 'block';
-      }
+    // Categories that should hide the type dropdown
+    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
+    
+    if (hideTypeCategories.includes(category)) {
+      typeSelectContainer.style.display = 'none';
+    } else {
       typeSelectContainer.style.display = 'block';
-      
-      if (category === 'cake') {
-        cakeAddons.style.display = 'block';
-      } else if (category === 'cupcakes') {
-        cupcakeAddons.style.display = 'block';
-      }
-      
-      if (category === 'breads') {
-        breadFlavorDisplay.style.display = 'block';
-        const flavors = breadFlavors[size] || 'Select a valid bread type above.';
-        breadFlavorText.textContent = flavors;
-      }
-      
-      if (category === 'bagels') {
-        bagelFlavorDisplay.style.display = 'block';
-        const flavors = bagelFlavors[size] || 'Select a valid bagel type above.';
-        bagelFlavorText.textContent = flavors;
-      }
-
-      tierMessage.style.display = 'none';
-
-      if (!category || !size) {
-        priceDisplay.textContent = '$0';
-        summaryBox.style.display = 'none';
-        return;
-      }
-
-      let finalPrice = 0;
-
-      // CAKE PRICING
-      if (category === 'cake') {
-        if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 70;
-        else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 90;
-        else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 110;
-        else if (size.includes('1/4 sheet')) finalPrice = 130;
-        else if (size.includes('1/2 sheet')) finalPrice = 175;
-      }
-      // BREAD
-      else if (category === 'breads') {
-        if (size.includes('Loaf')) finalPrice = 18;
-        else if (size.includes('Baguette')) finalPrice = 8;
-        else if (size.includes('Sandwich Bread')) finalPrice = 10;
-      }
-      // CAKE CUPS
-      else if (category === 'cake-cups') {
-        const count = parseInt(size);
-        finalPrice = count * 4;
-      }
-      // CUPCAKES
-      else if (category === 'cupcakes') {
-        if (size.includes('12 Count')) finalPrice = 45;
-        else if (size.includes('24 Count')) finalPrice = 65;
-      }
-      // CHEESECAKE
-      else if (category === 'cheesecake') {
-        if (size.includes('6 inch')) finalPrice = 70;
-        else if (size.includes('8 inch')) finalPrice = 90;
-      }
-      // OTHER
-      else {
-        if (size.includes('8 inch')) finalPrice = priceData[category].basePrice + 20;
-        else if (size.includes('10 inch')) finalPrice = priceData[category].basePrice + 40;
-        else finalPrice = priceData[category].basePrice;
-      }
-
-      // Add-ons for Cakes
-      if (category === 'cake') {
-        const checkboxes = document.querySelectorAll('#cake-addons input:checked');
-        checkboxes.forEach(cb => {
-          if (cb.value === 'filling') finalPrice += 10;
-          if (cb.value === 'custom-theme') finalPrice += 20;
-          if (cb.value === 'fondant') finalPrice += 20;
-          if (cb.value === 'faux-flowers') finalPrice += 10;
-          if (cb.value === 'fresh-flowers') finalPrice += 20;
-        });
-      }
-
-      // Add-ons for Cupcakes
-      if (category === 'cupcakes') {
-        const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
-        checkboxes.forEach(cb => {
-          if (cb.value === 'filling') finalPrice += 10;
-          if (cb.value === 'fondant') finalPrice += 20;
-          if (cb.value === 'faux-flowers') finalPrice += 10;
-          if (cb.value === 'fresh-flowers') finalPrice += 20;
-          if (cb.value === 'cake-topper') finalPrice += 5;
-        });
-      }
-
-      // Vegan surcharge
-      if (vegan) finalPrice += 15;
-
-      // Build summary
-      const catLabels = {
-        'cake': 'Cake',
-        'cupcakes': 'Cupcakes',
-        'breads': 'Bread',
-        'cinnamon-rolls': 'Cinnamon Rolls',
-        'cheesecake': 'Cheesecake',
-        'jeera-biscuits': 'Jeera Biscuits',
-        'cake-cups': 'Cake Cups',
-        'bagels': 'Bagels',
-        'ladi-pav': 'Ladi Pav'
-      };
-
-      let summary = `Category: ${catLabels[category] || category}\nSize: ${size}`;
-      if (flavor && (category === 'cake' || category === 'cupcakes')) {
-        summary += `\nFlavor: ${flavor}`;
-      }
-      if (vegan) summary += `\nType: Vegan (+$15)`;
-      else summary += `\nType: Eggless`;
-
-      // Add-ons summary
-      let addonList = [];
-      if (category === 'cake') {
-        document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-          addonList.push(cb.parentElement.textContent.trim());
-        });
-      }
-      if (category === 'cupcakes') {
-        document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-          addonList.push(cb.parentElement.textContent.trim());
-        });
-      }
-      if (addonList.length) {
-        summary += `\nAdd-ons: ${addonList.join(', ')}`;
-      }
-
-      summary += `\nEstimated Price: $${finalPrice}`;
-
-      document.getElementById('summaryText').textContent = summary;
-      summaryBox.style.display = 'block';
-
-      priceDisplay.textContent = '$' + finalPrice;
     }
+
+    // Check if tiered cake is selected
+    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
+
+    if (isTiered) {
+      // HIDE everything except the tier message
+      flavorContainer.style.display = 'none';
+      typeSelectContainer.style.display = 'none';
+      cakeAddons.style.display = 'none';
+      cupcakeAddons.style.display = 'none';
+      breadFlavorDisplay.style.display = 'none';
+      bagelFlavorDisplay.style.display = 'none';
+      tierMessage.style.display = 'block';
+      priceDisplay.textContent = 'Message us';
+      summaryBox.style.display = 'none';
+      return;
+    }
+
+    // Restore visibility for non-tiered selections
+    if (category === 'cake' || category === 'cupcakes') {
+      flavorContainer.style.display = 'block';
+    }
+    
+    if (category === 'cake') {
+      cakeAddons.style.display = 'block';
+    } else if (category === 'cupcakes') {
+      cupcakeAddons.style.display = 'block';
+    }
+    
+    if (category === 'breads') {
+      breadFlavorDisplay.style.display = 'block';
+      const flavors = breadFlavors[size] || 'Select a valid bread type above.';
+      breadFlavorText.textContent = flavors;
+    }
+    
+    if (category === 'bagels') {
+      bagelFlavorDisplay.style.display = 'block';
+      const flavors = bagelFlavors[size] || 'Select a valid bagel type above.';
+      bagelFlavorText.textContent = flavors;
+    }
+
+    tierMessage.style.display = 'none';
+
+    if (!category || !size) {
+      priceDisplay.textContent = '$0';
+      summaryBox.style.display = 'none';
+      return;
+    }
+
+    let finalPrice = 0;
+
+    // CAKE PRICING
+    if (category === 'cake') {
+      if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 70;
+      else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 90;
+      else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 110;
+      else if (size.includes('1/4 sheet')) finalPrice = 130;
+      else if (size.includes('1/2 sheet')) finalPrice = 175;
+    }
+    // BREAD
+    else if (category === 'breads') {
+      if (size.includes('Loaf')) finalPrice = 18;
+      else if (size.includes('Baguette')) finalPrice = 8;
+      else if (size.includes('Sandwich Bread')) finalPrice = 10;
+    }
+    // CAKE CUPS
+    else if (category === 'cake-cups') {
+      const count = parseInt(size);
+      finalPrice = count * 4;
+    }
+    // CUPCAKES
+    else if (category === 'cupcakes') {
+      if (size.includes('12 Count')) finalPrice = 45;
+      else if (size.includes('24 Count')) finalPrice = 65;
+    }
+    // CHEESECAKE
+    else if (category === 'cheesecake') {
+      if (size.includes('6 inch')) finalPrice = 70;
+      else if (size.includes('8 inch')) finalPrice = 90;
+    }
+    // OTHER
+    else {
+      if (size.includes('8 inch')) finalPrice = priceData[category].basePrice + 20;
+      else if (size.includes('10 inch')) finalPrice = priceData[category].basePrice + 40;
+      else finalPrice = priceData[category].basePrice;
+    }
+
+    // Add-ons for Cakes
+    if (category === 'cake') {
+      const checkboxes = document.querySelectorAll('#cake-addons input:checked');
+      checkboxes.forEach(cb => {
+        if (cb.value === 'filling') finalPrice += 10;
+        if (cb.value === 'custom-theme') finalPrice += 20;
+        if (cb.value === 'fondant') finalPrice += 20;
+        if (cb.value === 'faux-flowers') finalPrice += 10;
+        if (cb.value === 'fresh-flowers') finalPrice += 20;
+      });
+    }
+
+    // Add-ons for Cupcakes
+    if (category === 'cupcakes') {
+      const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
+      checkboxes.forEach(cb => {
+        if (cb.value === 'filling') finalPrice += 5;
+        if (cb.value === 'fondant') finalPrice += 10;
+      });
+    }
+
+    // Vegan surcharge
+    if (vegan) finalPrice += 15;
+
+    // Build summary
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+
+    let summary = `Category: ${catLabels[category] || category}\nSize: ${size}`;
+    if (flavor && (category === 'cake' || category === 'cupcakes')) {
+      summary += `\nFlavor: ${flavor}`;
+    }
+    if (vegan) summary += `\nType: Vegan (+$15)`;
+    else if (!hideTypeCategories.includes(category)) summary += `\nType: Eggless`;
+
+    // Add-ons summary
+    let addonList = [];
+    if (category === 'cake') {
+      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+        addonList.push(cb.parentElement.textContent.trim());
+      });
+    }
+    if (category === 'cupcakes') {
+      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+        addonList.push(cb.parentElement.textContent.trim());
+      });
+    }
+    if (addonList.length) {
+      summary += `\nAdd-ons: ${addonList.join(', ')}`;
+    }
+
+    summary += `\nEstimated Price: $${finalPrice}`;
+
+    document.getElementById('summaryText').textContent = summary;
+    summaryBox.style.display = 'block';
+
+    priceDisplay.textContent = '$' + finalPrice;
+  }
 
   function copySummary() {
     const text = document.getElementById('summaryText').textContent;
