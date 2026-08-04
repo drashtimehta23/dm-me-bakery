@@ -453,6 +453,139 @@
 
   /* ========== PRICING HELPER STYLES ========== */
   .pricing-helper{background:var(--cream-soft);padding:100px 0}.pricing-helper .wrap{max-width:760px;text-align:center}.pricing-box{background:var(--white);border-radius:18px;padding:40px;box-shadow:0 14px 40px -28px rgba(61,43,33,.5);border-top:3px solid var(--blush);text-align:left;margin-top:30px}.pricing-box select{width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%235C4636'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer}.pricing-box select:focus{outline:2px solid var(--blush)}.pricing-box label{display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem}.price-display{text-align:center;margin-top:20px;padding-top:20px;border-top:1px solid rgba(61,43,33,.08)}.price-display span{display:block;font-size:.95rem;color:var(--brown-500)}.price-display strong{font-size:2.2rem;color:var(--blush-deep);font-family:var(--serif)}.pricing-note{font-size:.85rem;color:var(--brown-500);margin-top:8px;display:block}.ph-step{display:none}.ph-step.active{display:block}
+
+    /* Gallery Modal */
+  .gallery-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .gallery-modal.active {
+    display: flex;
+  }
+  .gallery-modal .modal-content {
+    background: var(--white);
+    border-radius: 20px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .gallery-modal .close-modal {
+    position: sticky;
+    top: 0;
+    float: right;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--brown-900);
+    padding: 0 8px;
+    line-height: 1;
+    z-index: 10;
+  }
+  .gallery-modal .close-modal:hover {
+    color: var(--blush-deep);
+  }
+  .gallery-modal h3 {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    color: var(--brown-900);
+    margin-bottom: 20px;
+    padding-right: 40px;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .gallery-grid .gallery-item {
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 1/1;
+    background: var(--cream-soft);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .gallery-grid .gallery-item:hover {
+    transform: scale(1.03);
+  }
+  .gallery-grid .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .gallery-grid .gallery-item .placeholder-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--brown-500);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 10px;
+    background: var(--cream-soft);
+  }
+  .gallery-modal .no-images {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--brown-500);
+    font-size: 1rem;
+  }
+  .gallery-modal .no-images span {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 600px) {
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .gallery-modal .modal-content {
+      padding: 20px;
+    }
+    .gallery-modal h3 {
+      font-size: 1.3rem;
+    }
+  }
+
+  /* Gallery button style - matches Start Over button */
+  .gallery-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: 1.5px solid var(--brown-900);
+    color: var(--brown-900);
+    background: transparent;
+    cursor: pointer;
+    transition: transform .18s ease, background .2s ease, color .2s ease, border-color .2s ease;
+    white-space: nowrap;
+    margin-top: 8px;
+  }
+  .gallery-btn:hover {
+    background: var(--brown-900);
+    color: var(--cream);
+    transform: translateY(-2px);
+  }
+
 </style>
 </head>
 <body>
@@ -798,6 +931,17 @@
   </section>
 
 </main>
+
+<!-- ========== SECTION 2: GALLERY MODAL HTML ========== -->
+<div class="gallery-modal" id="galleryModal">
+  <div class="modal-content">
+    <button class="close-modal" id="closeGallery">&times;</button>
+    <h3 id="galleryTitle">Our Creations</h3>
+    <div id="galleryGrid" class="gallery-grid">
+      <!-- Images will be injected here -->
+    </div>
+  </div>
+</div>
 
 <!-- ============ FOOTER ============ -->
 <footer id="contact">
@@ -1192,6 +1336,188 @@
     document.getElementById('veganCheck').checked = false;
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
   }
+
+    // ========== GALLERY DATA ==========
+  const galleryData = {
+    'cake': {
+      title: '🎂 Cakes',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Vanilla+Cake',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Chocolate+Cake',
+        'https://via.placeholder.com/400/8A6F5C/FFFFFF?text=Red+Velvet',
+        'https://via.placeholder.com/400/A8CCC3/FFFFFF?text=Strawberry+Cake',
+        'https://via.placeholder.com/400/D89A72/FFFFFF?text=Funfetti+Cake',
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Tiered+Cake',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Smash+Cake'
+      ]
+    },
+    'cupcakes': {
+      title: '🧁 Cupcakes',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Vanilla+Cupcakes',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Chocolate+Cupcakes',
+        'https://via.placeholder.com/400/8A6F5C/FFFFFF?text=Strawberry+Cupcakes',
+        'https://via.placeholder.com/400/A8CCC3/FFFFFF?text=Red+Velvet+Cupcakes'
+      ]
+    },
+    'breads': {
+      title: '🍞 Breads',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Sourdough',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Jalapeño+Cheese+Bread',
+        'https://via.placeholder.com/400/8A6F5C/FFFFFF?text=Baguette'
+      ]
+    },
+    'brownies': {
+      title: '🍫 Brownies',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Fudgy+Brownies',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Walnut+Brownies'
+      ]
+    },
+    'cake-cups': {
+      title: '🥤 Cake Cups',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Cake+Cup+1',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Cake+Cup+2'
+      ]
+    },
+    'cinnamon-rolls': {
+      title: '🍥 Cinnamon Rolls',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Cinnamon+Rolls'
+      ]
+    },
+    'cheesecake': {
+      title: '🍰 Cheesecake',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=NY+Cheesecake',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Berry+Cheesecake'
+      ]
+    },
+    'jeera-biscuits': {
+      title: '🍪 Jeera Biscuits',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Jeera+Biscuits'
+      ]
+    },
+    'bagels': {
+      title: '🥯 Bagels',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Everything+Bagel',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Cinnamon+Bagel'
+      ]
+    },
+    'ladi-pav': {
+      title: '🍞 Ladi Pav',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Ladi+Pav'
+      ]
+    },
+    'custom-orders': {
+      title: '🎨 Custom Orders',
+      images: [
+        'https://via.placeholder.com/400/3D2B21/FFFFFF?text=Custom+Cake',
+        'https://via.placeholder.com/400/5C4636/FFFFFF?text=Cake+Hamper',
+        'https://via.placeholder.com/400/8A6F5C/FFFFFF?text=Custom+Treats'
+      ]
+    }
+  };
+
+  // ========== GALLERY FUNCTIONS ==========
+  function openGallery(category) {
+    const modal = document.getElementById('galleryModal');
+    const grid = document.getElementById('galleryGrid');
+    const title = document.getElementById('galleryTitle');
+    
+    const data = galleryData[category];
+    if (!data) {
+      grid.innerHTML = `<div class="no-images"><span>📸</span>No images available for this category yet.</div>`;
+      title.textContent = 'Gallery';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
+    title.textContent = data.title;
+    
+    let html = '';
+    if (data.images && data.images.length > 0) {
+      data.images.forEach(src => {
+        html += `
+          <div class="gallery-item">
+            <img src="${src}" alt="${category}" loading="lazy" onclick="window.open('${src}','_blank')">
+          </div>
+        `;
+      });
+    } else {
+      html = `<div class="no-images"><span>📸</span>No images uploaded yet. Check back soon!</div>`;
+    }
+    grid.innerHTML = html;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGallery() {
+    const modal = document.getElementById('galleryModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  // Close on backdrop click
+  document.getElementById('galleryModal').addEventListener('click', function(e) {
+    if (e.target === this) closeGallery();
+  });
+
+  // Close with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeGallery();
+  });
+
+  // Close button
+  document.getElementById('closeGallery').addEventListener('click', closeGallery);
+
+  // ========== ATTACH TO MENU CARDS ==========
+  document.addEventListener('DOMContentLoaded', function() {
+    const cardMap = {
+      'Cakes': 'cake',
+      'Cupcakes': 'cupcakes',
+      'Cake Cups': 'cake-cups',
+      'Brownies': 'brownies',
+      'Bread': 'breads',
+      'Custom Orders': 'custom-orders'
+    };
+
+    document.querySelectorAll('.card').forEach(card => {
+      const heading = card.querySelector('h3');
+      if (!heading) return;
+      const text = heading.textContent.trim();
+      const category = cardMap[text];
+      if (category) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('a') || e.target.closest('button')) return;
+          openGallery(category);
+        });
+        // Add gallery button matching Start Over style
+        const p = card.querySelector('p');
+        if (p) {
+          const btn = document.createElement('button');
+          btn.className = 'gallery-btn';
+          btn.textContent = 'View Gallery';
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openGallery(category);
+          });
+          p.after(btn);
+        }
+      }
+    });
+  });
+
 </script>
+
+
 </body>
 </html>
