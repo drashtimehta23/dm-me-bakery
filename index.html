@@ -1304,11 +1304,23 @@
       const time = document.getElementById('pickupTime').value;
 
       let summary = '';
-      
-      // Add date and time at the beginning if they exist
-      if (date) summary += `Date: ${date}\n`;
-      if (time) summary += `Time: ${time}\n`;
-      
+
+      // Format and add date and time at the beginning if they exist
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        summary += `Date: ${formattedDate}\n`;
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const formattedTime = `${hours}:${minutes} ${ampm}`;
+        summary += `Time: ${formattedTime}\n`;
+      }
       // Add category and size
       summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
       
@@ -1373,11 +1385,27 @@
       
       let newSummary = filteredLines.join('\n');
       
-      // Add date and time at the beginning if they exist
-      if (date || time) {
-        let dateTimePrefix = '';
-        if (date) dateTimePrefix += `Date: ${date}\n`;
-        if (time) dateTimePrefix += `Time: ${time}\n`;
+      // Format and add date and time at the beginning if they exist
+      let dateTimePrefix = '';
+      if (date) {
+        // Format date as M/D/YYYY
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        dateTimePrefix += `Date: ${formattedDate}\n`;
+      }
+      if (time) {
+        // Format time as H:MM AM/PM
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 12-hour format
+        const formattedTime = `${hours}:${minutes} ${ampm}`;
+        dateTimePrefix += `Time: ${formattedTime}\n`;
+      }
+      
+      if (dateTimePrefix) {
         newSummary = dateTimePrefix + newSummary;
       }
       
