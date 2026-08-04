@@ -1147,7 +1147,7 @@
       const bagelFlavorText = document.getElementById('bagel-flavor-text');
       const tierMessage = document.getElementById('tier-message');
       const summaryBox = document.getElementById('summaryBox');
-      const pricingNote = document.querySelector('.pricing-note');
+      const pricingNote = document.getElementById('pricingNote');
 
       // Get all elements that should be hidden for tiered cakes
       const flavorContainer = document.getElementById('flavor-container');
@@ -1330,11 +1330,7 @@
       summaryBox.style.display = 'block';
 
       // Update the main price display
-      if (isFixedPrice) {
-        priceDisplay.textContent = '$' + finalPrice;
-      } else {
-        priceDisplay.textContent = '$' + finalPrice;
-      }
+      priceDisplay.textContent = '$' + finalPrice;
     }
 
 
@@ -1436,7 +1432,7 @@
       ]
     },
     'breads': {
-      title: '🍞 Breads',
+      title: '🍞 Bread and Bagels',
       images: [
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/9.jpg',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/10.jpg',
