@@ -784,8 +784,8 @@
             </select>
           </div>
 
-          <!-- Vegan Checkbox -->
-          <div style="margin-top:15px;">
+          <!-- Type Dropdown - THIS WILL BE HIDDEN for Jeera Biscuit, Breads, Cinnamon Rolls, Cheesecake -->
+          <div id="type-container" style="margin-top:15px;">
             <label for="typeSelect" style="font-weight:600; color:var(--brown-900); font-family:var(--serif); font-size:1.1rem; display:block; margin-bottom:8px;">Type:</label>
             <select id="typeSelect" onchange="updatePrice()" style="width:100%; padding:12px 16px; border-radius:8px; border:1.5px solid rgba(61,43,33,0.15); font-family:var(--sans); font-size:1rem; color:var(--brown-700); background:var(--cream); margin-bottom:5px; appearance:none; -webkit-appearance:none; background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M6 8L1 3h10z%22 fill=%22%235C4636%22/%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 16px center; cursor:pointer;">
               <option value="regular">Eggless</option>
@@ -1056,6 +1056,15 @@
     cupcakeAddons.style.display = 'none';
     summaryBox.style.display = 'none';
 
+    // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES *****
+    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake'];
+    const typeContainer = document.getElementById('type-container');
+    if (hideTypeCategories.includes(category)) {
+      typeContainer.style.display = 'none';
+    } else {
+      typeContainer.style.display = 'block';
+    }
+
     if (category) {
       document.getElementById('step-category').classList.remove('active');
       stepDetails.classList.add('active');
@@ -1119,6 +1128,14 @@
       const cupcakeAddons = document.getElementById('cupcake-addons');
       const breadFlavorDisplay = document.getElementById('bread-flavor-display');
       const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
+
+      // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES (AGAIN FOR SAFETY) *****
+      const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake'];
+      if (hideTypeCategories.includes(category)) {
+        typeContainer.style.display = 'none';
+      } else {
+        typeContainer.style.display = 'block';
+      }
 
       // Check if tiered cake is selected
       const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
@@ -1229,8 +1246,8 @@
         });
       }
 
-      // Vegan surcharge
-      if (vegan) finalPrice += 15;
+      // Vegan surcharge (only if type dropdown is visible)
+      if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
 
       // Build summary
       const catLabels = {
@@ -1249,8 +1266,12 @@
       if (flavor && (category === 'cake' || category === 'cupcakes')) {
         summary += `\nFlavor: ${flavor}`;
       }
-      if (vegan) summary += `\nType: Vegan (+$15)`;
-      else summary += `\nType: Eggless`;
+
+      // Only show Type if the dropdown is visible
+      if (typeContainer.style.display !== 'none') {
+        if (vegan) summary += `\nType: Vegan (+$15)`;
+        else summary += `\nType: Eggless`;
+      }
 
       // Add-ons summary
       let addonList = [];
@@ -1323,6 +1344,7 @@
     document.getElementById('summaryBox').style.display = 'none';
     document.getElementById('veganCheck').checked = false;
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('type-container').style.display = 'block'; // Reset type visibility
   }
 
     // ========== GALLERY DATA ==========
