@@ -1147,7 +1147,7 @@
       const bagelFlavorText = document.getElementById('bagel-flavor-text');
       const tierMessage = document.getElementById('tier-message');
       const summaryBox = document.getElementById('summaryBox');
-      const pricingNote = document.getElementById('pricingNote');
+      const pricingNote = document.querySelector('.pricing-note');
 
       // Get all elements that should be hidden for tiered cakes
       const flavorContainer = document.getElementById('flavor-container');
@@ -1330,10 +1330,12 @@
       summaryBox.style.display = 'block';
 
       // Update the main price display
-      priceDisplay.textContent = '$' + finalPrice;
+      if (isFixedPrice) {
+        priceDisplay.textContent = '$' + finalPrice;
+      } else {
+        priceDisplay.textContent = '$' + finalPrice;
+      }
     }
-
-
 
     function copySummary() {
       const text = document.getElementById('summaryText').textContent;
