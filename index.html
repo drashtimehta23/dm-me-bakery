@@ -857,6 +857,15 @@
           <span class="pricing-note">*Final price depends on design and custom details. This is not your final price. We'll confirm your final price after you message us the details!</span>
         </div>
 
+        <!-- Date & Time Fields -->
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(61,43,33,0.08);">
+          <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:4px;font-family:var(--serif);font-size:1.1rem;">Pickup Date</label>
+          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:15px;cursor:pointer;" onchange="updateSummary()">
+          
+          <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:4px;font-family:var(--serif);font-size:1.1rem;">Pickup Time</label>
+          <input type="time" id="pickupTime" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:5px;cursor:pointer;" onchange="updateSummary()">
+        </div>
+
         <!-- Summary & Copy Box -->
         <div id="summaryBox" class="summary-box" style="display:none;">
           <strong><br>Your Selection:</strong>
@@ -866,7 +875,7 @@
         <!-- Reset Button -->
         <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:20px;">
           <button type="button" class="btn btn-outline btn-sm" onclick="resetPricing()">Start Over</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="sendToWhatsApp()">Send Details to Us</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="sendToWhatsApp()">Order</button>
         </div>
 
       </form>
@@ -1290,7 +1299,19 @@
         'ladi-pav': 'Ladi Pav'
       };
 
-      let summary = `Category: ${catLabels[category] || category}\nSize: ${size}`;
+      // Get date and time values
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+
+      let summary = '';
+      
+      // Add date and time at the beginning if they exist
+      if (date) summary += `Date: ${date}\n`;
+      if (time) summary += `Time: ${time}\n`;
+      
+      // Add category and size
+      summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
+      
       if (flavor && (category === 'cake' || category === 'cupcakes')) {
         summary += `\nFlavor: ${flavor}`;
       }
@@ -1316,7 +1337,7 @@
 
       // Determine if this is a fixed price item vs custom
       const isFixedPrice = fixedPriceCategories.includes(category);
-      
+
       if (isFixedPrice) {
         summary += `\nPrice: $${finalPrice}`;
         // Hide the "not final price" note for fixed-price items
@@ -1335,6 +1356,32 @@
       } else {
         priceDisplay.textContent = '$' + finalPrice;
       }
+    }
+   
+
+    function updateSummary() {
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      const summaryText = document.getElementById('summaryText');
+      let currentText = summaryText.textContent;
+      
+      // Remove existing date/time lines if they exist
+      const lines = currentText.split('\n');
+      const filteredLines = lines.filter(line => 
+        !line.startsWith('Date:') && !line.startsWith('Time:')
+      );
+      
+      let newSummary = filteredLines.join('\n');
+      
+      // Add date and time at the beginning if they exist
+      if (date || time) {
+        let dateTimePrefix = '';
+        if (date) dateTimePrefix += `Date: ${date}\n`;
+        if (time) dateTimePrefix += `Time: ${time}\n`;
+        newSummary = dateTimePrefix + newSummary;
+      }
+      
+      summaryText.textContent = newSummary;
     }
 
     function copySummary() {
@@ -1360,9 +1407,10 @@
   }
 
   function sendToWhatsApp() {
+    // Ensure summary is up to date
+    updateSummary();
     const text = document.getElementById('summaryText').textContent;
     const encoded = encodeURIComponent(text);
-    // WhatsApp number: 951-315-3100 (format: 19513153100)
     const phone = '19513153100';
     const url = `https://wa.me/${phone}?text=${encoded}`;
     window.open(url, '_blank');
@@ -1385,6 +1433,8 @@
     document.getElementById('priceOutput').textContent = '$0';
     document.getElementById('summaryBox').style.display = 'none';
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('pickupDate').value = '';
+    document.getElementById('pickupTime').value = '';
   }
 
     // ========== GALLERY DATA ==========
