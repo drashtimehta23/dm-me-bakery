@@ -769,12 +769,18 @@
           </select>
         </div>
 
-        <!-- Step 2: Size & Flavor -->
-        <div id="step-details" class="ph-step">
-          <label for="size">Select your size:</label>
-          <select id="size" onchange="updatePrice()">
-            <option value="">— Select a size —</option>
-          </select>
+          <!-- Step 2: Size & Flavor -->
+          <div id="step-details" class="ph-step">
+            <!-- ADD THIS NEW SECTION RIGHT HERE -->
+            <div id="selected-category-display" style="margin-bottom:15px; padding:10px 16px; background:var(--cream-soft); border-radius:8px; border-left:4px solid var(--blush);">
+              <strong style="color:var(--brown-900);">Selected:</strong>
+              <span id="selected-category-text" style="color:var(--brown-700); font-weight:500;"></span>
+            </div>
+
+            <label for="size">Select your size:</label>
+            <select id="size" onchange="updatePrice()">
+              <option value="">— Select a size —</option>
+            </select>
 
           <!-- Flavor dropdown for Cakes, Cupcakes -->
           <div id="flavor-container" style="display:none; margin-top:10px;">
@@ -1046,6 +1052,7 @@
     const cakeAddons = document.getElementById('cake-addons');
     const cupcakeAddons = document.getElementById('cupcake-addons');
     const summaryBox = document.getElementById('summaryBox');
+    const selectedCategoryText = document.getElementById('selected-category-text');
 
     // Reset
     flavorContainer.style.display = 'none';
@@ -1057,7 +1064,8 @@
     summaryBox.style.display = 'none';
 
     // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES *****
-    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake'];
+    // Added bagels and ladi-pav to the list
+    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
     const typeContainer = document.getElementById('type-container');
     if (hideTypeCategories.includes(category)) {
       typeContainer.style.display = 'none';
@@ -1065,9 +1073,25 @@
       typeContainer.style.display = 'block';
     }
 
+    // Category labels for display
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+
     if (category) {
       document.getElementById('step-category').classList.remove('active');
       stepDetails.classList.add('active');
+
+      // Show the selected category
+      selectedCategoryText.textContent = catLabels[category] || category;
 
       const sizes = priceData[category].sizes;
       sizeSelect.innerHTML = '<option value="">— Select a size —</option>';
@@ -1105,6 +1129,7 @@
     } else {
       document.getElementById('step-category').classList.add('active');
       stepDetails.classList.remove('active');
+      selectedCategoryText.textContent = '';
     }
     updatePrice();
   }
@@ -1123,14 +1148,15 @@
 
       // Get all elements that should be hidden for tiered cakes
       const flavorContainer = document.getElementById('flavor-container');
-      const typeContainer = document.getElementById('type-container'); // <-- THIS WAS MISSING
+      const typeContainer = document.getElementById('type-container');
       const cakeAddons = document.getElementById('cake-addons');
       const cupcakeAddons = document.getElementById('cupcake-addons');
       const breadFlavorDisplay = document.getElementById('bread-flavor-display');
       const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
 
-      // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES *****
-      const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake'];
+      // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES (AGAIN FOR SAFETY) *****
+      // Added bagels and ladi-pav to the list
+      const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
       if (hideTypeCategories.includes(category)) {
         typeContainer.style.display = 'none';
       } else {
@@ -1294,7 +1320,6 @@
 
       priceDisplay.textContent = '$' + finalPrice;
     }
-
     function copySummary() {
       const text = document.getElementById('summaryText').textContent;
       navigator.clipboard.writeText(text).then(() => {
@@ -1336,13 +1361,13 @@
     document.getElementById('tier-message').style.display = 'none';
     document.getElementById('cake-addons').style.display = 'none';
     document.getElementById('cupcake-addons').style.display = 'none';
+    document.getElementById('type-container').style.display = 'block'; // Reset type visibility
+    document.getElementById('selected-category-text').textContent = ''; // Clear category display
     document.getElementById('step-category').classList.add('active');
     document.getElementById('step-details').classList.remove('active');
     document.getElementById('priceOutput').textContent = '$0';
     document.getElementById('summaryBox').style.display = 'none';
-    document.getElementById('veganCheck').checked = false;
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    document.getElementById('type-container').style.display = 'block'; // Reset type visibility
   }
 
     // ========== GALLERY DATA ==========
