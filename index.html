@@ -772,7 +772,7 @@
   </section>
 
 <!-- ============ POLICY SECTION ============ -->
-<section class="policy" style="background: var(--cream-soft); padding: 70px 0;">
+<section class="policy" id="policy" style="background: var(--cream); padding: 90px 0;">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">Policies & Guidelines</span>
@@ -780,24 +780,42 @@
       <p>To ensure your custom order is perfect, please review our key policies below.</p>
     </div>
     
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:24px; margin-top:20px;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:28px; margin-top:20px;">
       
-      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
-        <div style="font-size:1.8rem; margin-bottom:8px;">📅</div>
-        <h3 style="font-size:1.1rem; margin-bottom:8px;">Order Ahead</h3>
-        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Please place cake orders at least 4–5 days in advance to ensure availability and thoughtful preparation.</p>
+      <div class="card" style="border-top: 3px solid var(--blush);">
+        <div class="icon">
+          <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="14" y="10" width="28" height="22" rx="3"/>
+            <path d="M14 18h28"/>
+            <path d="M22 10v7M34 10v7"/>
+            <circle cx="22" cy="26" r="1.5" fill="currentColor" stroke="none"/>
+            <circle cx="34" cy="26" r="1.5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;">Order Ahead</h3>
+        <p style="margin:0; color: var(--brown-500); font-size:0.95rem;">Please place cake orders at least <strong>4–5 days</strong> in advance to ensure availability and thoughtful preparation.</p>
       </div>
       
-      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
-        <div style="font-size:1.8rem; margin-bottom:8px;">⏱️</div>
-        <h3 style="font-size:1.1rem; margin-bottom:8px;">Same Day Orders</h3>
-        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Same day orders for cakes incur a <strong>$20</strong> surcharge. For cupcakes, the surcharge is <strong>$10</strong>. We do not accept same day orders for breads.</p>
+      <div class="card" style="border-top: 3px solid var(--blush);">
+        <div class="icon">
+          <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="28" cy="28" r="20"/>
+            <path d="M28 12v16l8 4"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;">Same Day Orders</h3>
+        <p style="margin:0; color: var(--brown-500); font-size:0.95rem;">Same day orders for cakes incur a <strong>$20</strong> surcharge. For cupcakes, the surcharge is <strong>$10</strong>. We do not accept same day orders for breads.</p>
       </div>
       
-      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
-        <div style="font-size:1.8rem; margin-bottom:8px;">✏️</div>
-        <h3 style="font-size:1.1rem; margin-bottom:8px;">Modifications</h3>
-        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Please notify us of any order changes at least 24 hours in advance. Design-specific changes may be subject to an additional charge.</p>
+      <div class="card" style="border-top: 3px solid var(--blush);">
+        <div class="icon">
+          <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 18l8 8M42 18l-8 8M28 12v14M22 18c-2-3-1-7 3-8 2-2 4-1 5 2"/>
+            <path d="M16 34l8-8M40 34l-8-8M22 40c2 3 5 4 8 2 3-2 4-5 2-8"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;">Modifications</h3>
+        <p style="margin:0; color: var(--brown-500); font-size:0.95rem;">Please notify us of any order changes at least <strong>24 hours</strong> in advance. Design-specific changes may be subject to an additional charge.</p>
       </div>
       
     </div>
@@ -1027,6 +1045,7 @@
       <ul>
         <li><a href="#about">About</a></li>
         <li><a href="#menu">Menu</a></li>
+        <li><a href="#policy">Policies</a></li>
         <li><a href="#pricing-helper">Pricing</a></li>
         <li><a href="#order">How to Order</a></li>
       </ul>
@@ -1136,8 +1155,6 @@
     cupcakeAddons.style.display = 'none';
     summaryBox.style.display = 'none';
 
-    // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES *****
-    // Added bagels and ladi-pav to the list
     const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
     const typeContainer = document.getElementById('type-container');
     if (hideTypeCategories.includes(category)) {
@@ -1146,7 +1163,6 @@
       typeContainer.style.display = 'block';
     }
 
-    // Category labels for display
     const catLabels = {
       'cake': 'Cake',
       'cupcakes': 'Cupcakes',
@@ -1162,8 +1178,6 @@
     if (category) {
       document.getElementById('step-category').classList.remove('active');
       stepDetails.classList.add('active');
-
-      // Show the selected category
       selectedCategoryText.textContent = catLabels[category] || category;
 
       const sizes = priceData[category].sizes;
@@ -1221,7 +1235,6 @@
       const tierMessage = document.getElementById('tier-message');
       const summaryBox = document.getElementById('summaryBox');
 
-      // Get all elements that should be hidden for tiered cakes
       const flavorContainer = document.getElementById('flavor-container');
       const typeContainer = document.getElementById('type-container');
       const cakeAddons = document.getElementById('cake-addons');
@@ -1229,7 +1242,6 @@
       const breadFlavorDisplay = document.getElementById('bread-flavor-display');
       const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
 
-      // ***** HIDE TYPE DROPDOWN FOR THESE CATEGORIES *****
       const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
       if (hideTypeCategories.includes(category)) {
         typeContainer.style.display = 'none';
@@ -1237,10 +1249,7 @@
         typeContainer.style.display = 'block';
       }
 
-      // Define fixed-price categories (no custom design pricing)
       const fixedPriceCategories = ['breads', 'cinnamon-rolls', 'jeera-biscuits', 'bagels', 'ladi-pav'];
-
-      // Check if tiered cake is selected
       const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
 
       if (isTiered) {
@@ -1258,7 +1267,6 @@
         return;
       }
 
-      // Restore visibility for non-tiered selections
       if (category === 'cake' || category === 'cupcakes') {
         flavorContainer.style.display = 'block';
       }
@@ -1293,7 +1301,6 @@
 
       let finalPrice = 0;
 
-      // CAKE PRICING
       if (category === 'cake') {
         if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 70;
         else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 90;
@@ -1301,33 +1308,27 @@
         else if (size.includes('1/4 sheet')) finalPrice = 130;
         else if (size.includes('1/2 sheet')) finalPrice = 175;
       }
-      // BREAD
       else if (category === 'breads') {
         if (size.includes('Loaf')) finalPrice = 18;
         else if (size.includes('Baguette')) finalPrice = 8;
         else if (size.includes('Sandwich Bread')) finalPrice = 10;
       }
-      // CAKE CUPS
       else if (category === 'cake-cups') {
         const count = parseInt(size);
         finalPrice = count * 4;
       }
-      // CUPCAKES
       else if (category === 'cupcakes') {
         if (size.includes('12 Count')) finalPrice = 45;
         else if (size.includes('24 Count')) finalPrice = 65;
       }
-      // CHEESECAKE
       else if (category === 'cheesecake') {
         if (size.includes('6 inch')) finalPrice = 70;
         else if (size.includes('8 inch')) finalPrice = 90;
       }
-      // OTHER (cinnamon-rolls, jeera-biscuits, bagels, ladi-pav)
       else {
         finalPrice = priceData[category]?.basePrice || 0;
       }
 
-      // Add-ons for Cakes
       if (category === 'cake') {
         const checkboxes = document.querySelectorAll('#cake-addons input:checked');
         checkboxes.forEach(cb => {
@@ -1339,7 +1340,6 @@
         });
       }
 
-      // Add-ons for Cupcakes
       if (category === 'cupcakes') {
         const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
         checkboxes.forEach(cb => {
@@ -1348,10 +1348,8 @@
         });
       }
 
-      // Vegan surcharge (only if type dropdown is visible)
       if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
 
-      // Build summary
       const catLabels = {
         'cake': 'Cake',
         'cupcakes': 'Cupcakes',
@@ -1364,13 +1362,11 @@
         'ladi-pav': 'Ladi Pav'
       };
 
-      // Get date and time values
       const date = document.getElementById('pickupDate').value;
       const time = document.getElementById('pickupTime').value;
 
       let summary = '';
 
-      // Format and add date and time at the beginning if they exist
       if (date) {
         const dateObj = new Date(date + 'T00:00:00');
         const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
@@ -1386,7 +1382,6 @@
         const formattedTime = `${hours}:${minutes} ${ampm}`;
         summary += `Time: ${formattedTime}\n`;
       }
-      // Add category and size
       summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
       
       if (flavor && (category === 'cake' || category === 'cupcakes')) {
@@ -1412,10 +1407,8 @@
         summary += `\nAdd-ons: ${addonList.join(', ')}`;
       }
 
-      // Determine if this is a fixed price item vs custom
       const isFixedPrice = fixedPriceCategories.includes(category);
 
-      // Update the label and note based on fixed price
       if (isFixedPrice) {
         priceLabel.textContent = 'Price';
         pricingNote.style.display = 'none';
@@ -1428,8 +1421,6 @@
 
       document.getElementById('summaryText').textContent = summary;
       summaryBox.style.display = 'block';
-
-      // Update the main price display
       priceDisplay.textContent = '$' + finalPrice;
     }
    
@@ -1440,7 +1431,6 @@
       const summaryText = document.getElementById('summaryText');
       let currentText = summaryText.textContent;
       
-      // Remove existing date/time lines if they exist
       const lines = currentText.split('\n');
       const filteredLines = lines.filter(line => 
         !line.startsWith('Date:') && !line.startsWith('Time:')
@@ -1448,22 +1438,19 @@
       
       let newSummary = filteredLines.join('\n');
       
-      // Format and add date and time at the beginning if they exist
       let dateTimePrefix = '';
       if (date) {
-        // Format date as M/D/YYYY
         const dateObj = new Date(date + 'T00:00:00');
         const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
         dateTimePrefix += `Date: ${formattedDate}\n`;
       }
       if (time) {
-        // Format time as H:MM AM/PM
         const timeParts = time.split(':');
         let hours = parseInt(timeParts[0]);
         const minutes = timeParts[1];
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12; // 12-hour format
+        hours = hours ? hours : 12;
         const formattedTime = `${hours}:${minutes} ${ampm}`;
         dateTimePrefix += `Time: ${formattedTime}\n`;
       }
@@ -1483,7 +1470,6 @@
         btn.textContent = '✅ Copied!';
         setTimeout(() => { btn.textContent = original; }, 2000);
       }).catch(() => {
-        // Fallback
         const textarea = document.createElement('textarea');
         textarea.value = document.getElementById('summaryText').textContent;
         document.body.appendChild(textarea);
@@ -1498,7 +1484,6 @@
   }
 
   function sendToWhatsApp() {
-    // Ensure summary is up to date
     updateSummary();
     const text = document.getElementById('summaryText').textContent;
     const encoded = encodeURIComponent(text);
@@ -1517,8 +1502,8 @@
     document.getElementById('tier-message').style.display = 'none';
     document.getElementById('cake-addons').style.display = 'none';
     document.getElementById('cupcake-addons').style.display = 'none';
-    document.getElementById('type-container').style.display = 'block'; // Reset type visibility
-    document.getElementById('selected-category-text').textContent = ''; // Clear category display
+    document.getElementById('type-container').style.display = 'block';
+    document.getElementById('selected-category-text').textContent = '';
     document.getElementById('step-category').classList.add('active');
     document.getElementById('step-details').classList.remove('active');
     document.getElementById('priceOutput').textContent = '$0';
