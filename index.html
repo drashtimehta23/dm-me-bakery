@@ -771,6 +771,39 @@
     </div>
   </section>
 
+<!-- ============ POLICY SECTION ============ -->
+<section class="policy" style="background: var(--cream-soft); padding: 70px 0;">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Policies & Guidelines</span>
+      <h2>Important Order Information</h2>
+      <p>To ensure your custom order is perfect, please review our key policies below.</p>
+    </div>
+    
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:24px; margin-top:20px;">
+      
+      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
+        <div style="font-size:1.8rem; margin-bottom:8px;">📅</div>
+        <h3 style="font-size:1.1rem; margin-bottom:8px;">Order Ahead</h3>
+        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Please place cake orders at least 4–5 days in advance to ensure availability and thoughtful preparation.</p>
+      </div>
+      
+      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
+        <div style="font-size:1.8rem; margin-bottom:8px;">⏱️</div>
+        <h3 style="font-size:1.1rem; margin-bottom:8px;">Same Day Orders</h3>
+        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Same day orders for cakes incur a <strong>$20</strong> surcharge. For cupcakes, the surcharge is <strong>$10</strong>. We do not accept same day orders for breads.</p>
+      </div>
+      
+      <div style="background: var(--white); padding:24px; border-radius:18px; border-top:3px solid var(--blush);">
+        <div style="font-size:1.8rem; margin-bottom:8px;">✏️</div>
+        <h3 style="font-size:1.1rem; margin-bottom:8px;">Modifications</h3>
+        <p style="font-size:0.95rem; color: var(--brown-500); margin:0;">Please notify us of any order changes at least 24 hours in advance. Design-specific changes may be subject to an additional charge.</p>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
 <!-- ========== PRICING HELPER SECTION ========== -->
 <section class="pricing-helper" id="pricing-helper">
   <div class="wrap">
@@ -881,9 +914,9 @@
 
         <!-- Price Display -->
         <div class="price-display">
-          <span>Estimated starting price</span>
+          <span id="priceLabel">Estimated starting price</span>
           <strong id="priceOutput">$0</strong>
-          <span class="pricing-note">*Final price depends on design and custom details. This is not your final price. We'll confirm your final price after you message us the details!</span>
+          <span class="pricing-note" id="pricingNote">*Final price depends on design and custom details. This is not your final price. We'll confirm your final price after you message us the details!</span>
         </div>
 
         <!-- Date & Time Fields -->
@@ -1181,11 +1214,12 @@
       const typeSelect = document.getElementById('typeSelect');
       const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
       const priceDisplay = document.getElementById('priceOutput');
+      const priceLabel = document.getElementById('priceLabel');
+      const pricingNote = document.getElementById('pricingNote');
       const breadFlavorText = document.getElementById('bread-flavor-text');
       const bagelFlavorText = document.getElementById('bagel-flavor-text');
       const tierMessage = document.getElementById('tier-message');
       const summaryBox = document.getElementById('summaryBox');
-      const pricingNote = document.querySelector('.pricing-note');
 
       // Get all elements that should be hidden for tiered cakes
       const flavorContainer = document.getElementById('flavor-container');
@@ -1218,8 +1252,9 @@
         bagelFlavorDisplay.style.display = 'none';
         tierMessage.style.display = 'block';
         priceDisplay.textContent = 'Message us';
+        priceLabel.textContent = 'Pricing';
+        pricingNote.style.display = 'none';
         summaryBox.style.display = 'none';
-        if (pricingNote) pricingNote.style.display = 'block';
         return;
       }
 
@@ -1250,8 +1285,9 @@
 
       if (!category || !size) {
         priceDisplay.textContent = '$0';
+        priceLabel.textContent = 'Estimated starting price';
+        pricingNote.style.display = 'block';
         summaryBox.style.display = 'none';
-        if (pricingNote) pricingNote.style.display = 'block';
         return;
       }
 
@@ -1379,24 +1415,22 @@
       // Determine if this is a fixed price item vs custom
       const isFixedPrice = fixedPriceCategories.includes(category);
 
+      // Update the label and note based on fixed price
       if (isFixedPrice) {
+        priceLabel.textContent = 'Price';
+        pricingNote.style.display = 'none';
         summary += `\nPrice: $${finalPrice}`;
-        // Hide the "not final price" note for fixed-price items
-        if (pricingNote) pricingNote.style.display = 'none';
       } else {
+        priceLabel.textContent = 'Estimated starting price';
+        pricingNote.style.display = 'block';
         summary += `\nEstimated Price: $${finalPrice}`;
-        if (pricingNote) pricingNote.style.display = 'block';
       }
 
       document.getElementById('summaryText').textContent = summary;
       summaryBox.style.display = 'block';
 
       // Update the main price display
-      if (isFixedPrice) {
-        priceDisplay.textContent = '$' + finalPrice;
-      } else {
-        priceDisplay.textContent = '$' + finalPrice;
-      }
+      priceDisplay.textContent = '$' + finalPrice;
     }
    
 
@@ -1488,6 +1522,8 @@
     document.getElementById('step-category').classList.add('active');
     document.getElementById('step-details').classList.remove('active');
     document.getElementById('priceOutput').textContent = '$0';
+    document.getElementById('priceLabel').textContent = 'Estimated starting price';
+    document.getElementById('pricingNote').style.display = 'block';
     document.getElementById('summaryBox').style.display = 'none';
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.getElementById('pickupDate').value = '';
