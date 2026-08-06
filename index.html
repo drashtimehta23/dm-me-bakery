@@ -1484,12 +1484,44 @@
   }
 
   function sendToWhatsApp() {
+    // Validate date and time first
+    if (!validateDateTime()) {
+      return;
+    }
+    
+    // Ensure summary is up to date
     updateSummary();
     const text = document.getElementById('summaryText').textContent;
     const encoded = encodeURIComponent(text);
     const phone = '19513153100';
     const url = `https://wa.me/${phone}?text=${encoded}`;
     window.open(url, '_blank');
+  }
+
+    // ========== VALIDATE DATE & TIME ==========
+  function validateDateTime() {
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    const category = document.getElementById('category').value;
+    
+    if (!category) {
+      alert('Please select a category first.');
+      return false;
+    }
+    
+    if (!date) {
+      alert('Please select a pickup date.');
+      document.getElementById('pickupDate').focus();
+      return false;
+    }
+    
+    if (!time) {
+      alert('Please select a pickup time.');
+      document.getElementById('pickupTime').focus();
+      return false;
+    }
+    
+    return true;
   }
 
   function resetPricing() {
