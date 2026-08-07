@@ -1483,58 +1483,50 @@
       });
   }
 
-    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwFUW9Vub_n_gPd_HTk4C_vHH96nAupLcMOU8Yc9OsGw9_My_IA9x38P2ZQAiCuRIQ4qQ/exec';
+    // ============================================================
+    // COMPLETE - sendToWhatsApp() with INSTANT redirect
+    // ============================================================
 
-    async function sendToWhatsApp() {
-      console.log('📞 sendToWhatsApp called');
-      
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzkTCKAZ5P2WV4JZXiqMeWVrzPHWTlS6N_LZ3Ueop1lX_cX7RCRBbmMWKRJk_Um3gJ1/exec';
+
+    function sendToWhatsApp() {
       // Validate date and time
       if (!validateDateTime()) {
-        console.log('❌ Validation failed');
+        alert('Please select both a pickup date and time before ordering.');
         return;
       }
       
       // Ensure summary is up to date
       updateSummary();
       
-      // Collect order data
+      // Collect order data for Google Sheets
       const orderData = collectOrderData();
-      console.log('📦 Order data:', orderData);
       
-      // Log to Google Sheets with proper error handling
-      try {
-        console.log('🌐 Sending to:', GOOGLE_SHEETS_URL);
-        
-        const response = await fetch(GOOGLE_SHEETS_URL, {
-          method: 'POST',
-          mode: 'no-cors',  // This is key for CORS bypass
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData)
-        });
-        
-        // With mode: 'no-cors', we can't read the response
-        console.log('📡 Request sent successfully (no-cors mode)');
-        console.log('✅ Order logged to Google Sheets!');
-        
-      } catch (error) {
-        console.warn('⚠️ Could not connect to Google Sheets:', error);
-        // Still proceed to WhatsApp
-      }
-      
-      // Open WhatsApp with pre-filled message
+      // === OPEN WHATSAPP INSTANTLY (no waiting) ===
       const text = document.getElementById('summaryText').textContent;
       const encoded = encodeURIComponent(text);
       const phone = '19513153100';
       const url = `https://wa.me/${phone}?text=${encoded}`;
-      console.log('📱 Opening WhatsApp...');
       window.open(url, '_blank');
+      
+      // === LOG TO GOOGLE SHEETS IN BACKGROUND ===
+      // This runs separately and doesn't block WhatsApp
+      fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      })
+      .catch((error) => {
+        // Silently fail - order still goes through
+        console.warn('⚠️ Google Sheets log failed:', error);
+      });
     }
 
-
-
-    // ============================================================
+    
+// ============================================================
 // UPDATED: collectOrderData() - matches your sheet columns
 // ============================================================
 
