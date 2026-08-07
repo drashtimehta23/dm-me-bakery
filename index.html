@@ -616,6 +616,14 @@
   }
 
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YLGDMH8DCX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-YLGDMH8DCX');
+</script>
 </head>
 <body>
 
@@ -651,7 +659,7 @@
       <div class="hero-copy reveal">
         <span class="eyebrow">made with love</span>
         <h1>Eggless &amp; Vegan baking,<br>from our kitchen to yours.</h1>
-        <p class="lede">Handcrafted eggless cakes, cupcakes, brownies, bread, and custom treats! Dairy-Free Options available!</p>
+        <p class="lede">Handcrafted eggless cakes, cupcakes, brownies, bread, and custom treats! Dairy-Free options available!</p>
 
         <div class="pill-row">
           <span class="pill"><i></i>Eggless</span>
@@ -1483,69 +1491,107 @@
       });
   }
 
-  function sendToWhatsApp() {
-    // Validate date and time first
-    if (!validateDateTime()) {
-      return;
+    function sendToWhatsApp() {
+      if (!validateDateTime()) return;
+      
+      updateSummary();
+      const text = document.getElementById('summaryText').textContent;
+      const encoded = encodeURIComponent(text);
+      const phone = '19513153100';
+      const url = `https://wa.me/${phone}?text=${encoded}`;
+      
+      // Collect data for Google Sheets
+      const data = {
+        category: document.getElementById('category').value,
+        size: document.getElementById('size').value,
+        flavor: document.getElementById('flavor').value || 'N/A',
+        type: document.getElementById('typeSelect') ? document.getElementById('typeSelect').value : 'N/A',
+        addons: getSelectedAddons(),
+        price: document.getElementById('priceOutput').textContent,
+        date: document.getElementById('pickupDate').value,
+        time: document.getElementById('pickupTime').value,
+        summary: text
+      };
+      
+      // Send to Google Sheets
+      sendToGoogleSheets(data);
+      
+      // Open WhatsApp
+      window.open(url, '_blank');
     }
-    
-    // Ensure summary is up to date
-    updateSummary();
-    const text = document.getElementById('summaryText').textContent;
-    const encoded = encodeURIComponent(text);
-    const phone = '19513153100';
-    const url = `https://wa.me/${phone}?text=${encoded}`;
-    window.open(url, '_blank');
-  }
 
-    // ========== VALIDATE DATE & TIME ==========
-  function validateDateTime() {
-    const date = document.getElementById('pickupDate').value;
-    const time = document.getElementById('pickupTime').value;
-    const category = document.getElementById('category').value;
-    
-    if (!category) {
-      alert('Please select a category first.');
-      return false;
+    function getSelectedAddons() {
+      const addons = [];
+      document.querySelectorAll('#cake-addons input:checked, #cupcake-addons input:checked').forEach(cb => {
+        addons.push(cb.parentElement.textContent.trim());
+      });
+      return addons.join(', ') || 'None';
     }
-    
-    if (!date) {
-      alert('Please select a pickup date.');
-      document.getElementById('pickupDate').focus();
-      return false;
-    }
-    
-    if (!time) {
-      alert('Please select a pickup time.');
-      document.getElementById('pickupTime').focus();
-      return false;
-    }
-    
-    return true;
-  }
 
-  function resetPricing() {
-    document.getElementById('category').value = '';
-    document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
-    document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
-    document.getElementById('flavor-container').style.display = 'none';
-    document.getElementById('bread-flavor-display').style.display = 'none';
-    document.getElementById('bagel-flavor-display').style.display = 'none';
-    document.getElementById('tier-message').style.display = 'none';
-    document.getElementById('cake-addons').style.display = 'none';
-    document.getElementById('cupcake-addons').style.display = 'none';
-    document.getElementById('type-container').style.display = 'block';
-    document.getElementById('selected-category-text').textContent = '';
-    document.getElementById('step-category').classList.add('active');
-    document.getElementById('step-details').classList.remove('active');
-    document.getElementById('priceOutput').textContent = '$0';
-    document.getElementById('priceLabel').textContent = 'Estimated starting price';
-    document.getElementById('pricingNote').style.display = 'block';
-    document.getElementById('summaryBox').style.display = 'none';
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    document.getElementById('pickupDate').value = '';
-    document.getElementById('pickupTime').value = '';
-  }
+      // ========== VALIDATE DATE & TIME ==========
+    function validateDateTime() {
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      const category = document.getElementById('category').value;
+      
+      if (!category) {
+        alert('Please select a category first.');
+        return false;
+      }
+      
+      if (!date) {
+        alert('Please select a pickup date.');
+        document.getElementById('pickupDate').focus();
+        return false;
+      }
+      
+      if (!time) {
+        alert('Please select a pickup time.');
+        document.getElementById('pickupTime').focus();
+        return false;
+      }
+      
+      return true;
+    }
+
+    function resetPricing() {
+      document.getElementById('category').value = '';
+      document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
+      document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
+      document.getElementById('flavor-container').style.display = 'none';
+      document.getElementById('bread-flavor-display').style.display = 'none';
+      document.getElementById('bagel-flavor-display').style.display = 'none';
+      document.getElementById('tier-message').style.display = 'none';
+      document.getElementById('cake-addons').style.display = 'none';
+      document.getElementById('cupcake-addons').style.display = 'none';
+      document.getElementById('type-container').style.display = 'block';
+      document.getElementById('selected-category-text').textContent = '';
+      document.getElementById('step-category').classList.add('active');
+      document.getElementById('step-details').classList.remove('active');
+      document.getElementById('priceOutput').textContent = '$0';
+      document.getElementById('priceLabel').textContent = 'Estimated starting price';
+      document.getElementById('pricingNote').style.display = 'block';
+      document.getElementById('summaryBox').style.display = 'none';
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.getElementById('pickupDate').value = '';
+      document.getElementById('pickupTime').value = '';
+    }
+
+    // Track pricing tool usage
+    function trackPricingEvent(category, price) {
+      gtag('event', 'pricing_estimate', {
+        'category': category,
+        'price': price
+      });
+    }
+
+    // Track WhatsApp clicks
+    function trackWhatsAppClick() {
+      gtag('event', 'click_whatsapp', {
+        'event_category': 'conversion',
+        'event_label': 'Order Click'
+      });
+    }
 
     // ========== GALLERY DATA ==========
   const galleryData = {
@@ -1762,6 +1808,19 @@
       }
     });
   });
+
+  function sendToGoogleSheets(data) {
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzTHnuKqeOvneKPz4RK5bED2HrZtcWAHF3KBIca8JlV4xK9KTP4bo0nMENmVcDv-RA-/exec'; // Replace with your URL
+  
+  fetch(scriptURL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  }).catch(error => console.error('Error:', error));
+}
 
 </script>
 </body>
