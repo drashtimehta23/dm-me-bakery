@@ -1483,19 +1483,128 @@
       });
   }
 
-  function sendToWhatsApp() {
-    // Validate date and time first
-    if (!validateDateTime()) {
-      return;
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwFUW9Vub_n_gPd_HTk4C_vHH96nAupLcMOU8Yc9OsGw9_My_IA9x38P2ZQAiCuRIQ4qQ/exec';
+
+    async function sendToWhatsApp() {
+      console.log('📞 sendToWhatsApp called');
+      
+      // Validate date and time
+      if (!validateDateTime()) {
+        console.log('❌ Validation failed');
+        return;
+      }
+      
+      // Ensure summary is up to date
+      updateSummary();
+      
+      // Collect order data
+      const orderData = collectOrderData();
+      console.log('📦 Order data:', orderData);
+      
+      // Log to Google Sheets with proper error handling
+      try {
+        console.log('🌐 Sending to:', GOOGLE_SHEETS_URL);
+        
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+          method: 'POST',
+          mode: 'no-cors',  // This is key for CORS bypass
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        // With mode: 'no-cors', we can't read the response
+        console.log('📡 Request sent successfully (no-cors mode)');
+        console.log('✅ Order logged to Google Sheets!');
+        
+      } catch (error) {
+        console.warn('⚠️ Could not connect to Google Sheets:', error);
+        // Still proceed to WhatsApp
+      }
+      
+      // Open WhatsApp with pre-filled message
+      const text = document.getElementById('summaryText').textContent;
+      const encoded = encodeURIComponent(text);
+      const phone = '19513153100';
+      const url = `https://wa.me/${phone}?text=${encoded}`;
+      console.log('📱 Opening WhatsApp...');
+      window.open(url, '_blank');
+    }
+
+
+
+    // ============================================================
+// UPDATED: collectOrderData() - matches your sheet columns
+// ============================================================
+
+  function collectOrderData() {
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    const price = document.getElementById('priceOutput').textContent;
+    
+    // Get add-ons
+    let addons = [];
+    if (category === 'cake') {
+      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
+    }
+    if (category === 'cupcakes') {
+      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
     }
     
-    // Ensure summary is up to date
-    updateSummary();
-    const text = document.getElementById('summaryText').textContent;
-    const encoded = encodeURIComponent(text);
-    const phone = '19513153100';
-    const url = `https://wa.me/${phone}?text=${encoded}`;
-    window.open(url, '_blank');
+    // Build product description
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+    
+    let product = catLabels[category] || category;
+    if (size) product += ` - ${size}`;
+    if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
+    if (vegan) product += ' [VEGAN]';
+    if (addons.length) product += ` + ${addons.join(', ')}`;
+    
+    // Build notes for WhatsApp message
+    let notes = '';
+    if (date) {
+      const dateObj = new Date(date + 'T00:00:00');
+      notes += `Pickup Date: ${dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`;
+    }
+    if (time) {
+      const timeParts = time.split(':');
+      let hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      notes += notes ? ` | Time: ${hours}:${minutes} ${ampm}` : `Time: ${hours}:${minutes} ${ampm}`;
+    }
+    
+    // Return data matching your sheet columns
+    return {
+      customerName: '',        // C: Customer Name - user fills in WhatsApp
+      phoneNumber: '',         // G: Phone Number - user fills in WhatsApp
+      location: 'Eastvale, CA', // F: Location
+      occasion: '',            // H: Occasion - user fills in WhatsApp
+      product: product,        // I: Product
+      amount: price            // J: Amount
+    };
   }
 
     // ========== VALIDATE DATE & TIME ==========
@@ -1764,5 +1873,118 @@
   });
 
 </script>
+// ============================================================
+// GOOGLE SHEETS INTEGRATION - dm.me.bakery
+// ============================================================
+
+// Your Google Apps Script Web App URL
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzt5j17zwoMJf2-zQAjfcRujZj9z-FXQR4JFhtftcWBlu-GRsdmxp4Ncr8gued_q1WkfA/exec';
+
+// Modified sendToWhatsApp function
+async function sendToWhatsApp() {
+  // Validate date and time first
+  if (!validateDateTime()) {
+    return;
+  }
+  
+  // Ensure summary is up to date
+  updateSummary();
+  
+  // 1. Collect order data
+  const orderData = collectOrderData();
+  
+  // 2. Log to Google Sheets
+  try {
+    const response = await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData)
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      console.log('✅ Order logged to Google Sheets!');
+    } else {
+      console.warn('⚠️ Google Sheets log failed:', result.error);
+      // Still proceed to WhatsApp even if logging fails
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not connect to Google Sheets:', error);
+    // Still proceed to WhatsApp
+  }
+  
+  // 3. Open WhatsApp with pre-filled message
+  const text = document.getElementById('summaryText').textContent;
+  const encoded = encodeURIComponent(text);
+  const phone = '19513153100';
+  const url = `https://wa.me/${phone}?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+// Collect order data from the form
+function collectOrderData() {
+  const category = document.getElementById('category').value;
+  const size = document.getElementById('size').value;
+  const flavor = document.getElementById('flavor').value;
+  const typeSelect = document.getElementById('typeSelect');
+  const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+  
+  // Get selected date and time
+  const date = document.getElementById('pickupDate').value;
+  const time = document.getElementById('pickupTime').value;
+  
+  // Get price
+  const price = document.getElementById('priceOutput').textContent;
+  
+  // Get add-ons
+  let addons = [];
+  if (category === 'cake') {
+    document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+      addons.push(cb.value);
+    });
+  }
+  if (category === 'cupcakes') {
+    document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+      addons.push(cb.value);
+    });
+  }
+  
+  // Build product description
+  const catLabels = {
+    'cake': 'Cake',
+    'cupcakes': 'Cupcakes',
+    'breads': 'Bread',
+    'cinnamon-rolls': 'Cinnamon Rolls',
+    'cheesecake': 'Cheesecake',
+    'jeera-biscuits': 'Jeera Biscuits',
+    'cake-cups': 'Cake Cups',
+    'bagels': 'Bagels',
+    'ladi-pav': 'Ladi Pav'
+  };
+  
+  let product = catLabels[category] || category;
+  if (size) product += ` - ${size}`;
+  if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
+  if (vegan) product += ' [VEGAN]';
+  if (addons.length) product += ` + ${addons.join(', ')}`;
+  
+  // Build notes
+  let notes = '';
+  if (date) notes += `Pickup Date: ${date}`;
+  if (time) notes += ` | Time: ${time}`;
+  
+  return {
+    customerName: '',  // User will provide in WhatsApp
+    phoneNumber: '',   // User will provide in WhatsApp  
+    product: product,
+    amount: price,
+    notes: notes
+  };
+}
+
+
+
 </body>
 </html>
