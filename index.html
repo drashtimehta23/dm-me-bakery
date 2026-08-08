@@ -1703,13 +1703,17 @@
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/48.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/49.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/50.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/51.png',
+
       ]
     },
     'cupcakes': {
       title: '🧁 Cupcakes',
       images: [
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/52.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/53.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/54.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/55.png',
+
 
 
       ]
@@ -1717,13 +1721,15 @@
     'breads': {
       title: '🍞 Bread and Bagels',
       images: [
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/54.png',
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/55.png',
+       
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/56.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/57.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/58.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/59.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/60.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/61.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/62.png',
+
 
 
 
@@ -1734,15 +1740,15 @@
     'brownies': {
       title: '🍫 Brownies',
       images: [
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/51.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/52.png',
       ]
     },
     'cake-cups': {
       title: '🥤 Cake Cups',
       images: [
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/61.png',
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/62.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/63.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/64.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/65.png',
 
 
       ]
@@ -1766,7 +1772,7 @@
     'custom-orders': {
       title: '🎨 Custom Orders',
       images: [
-        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/64.png',
+        'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/66.png',
       
       ]
     }
@@ -1865,118 +1871,5 @@
   });
 
 </script>
-// ============================================================
-// GOOGLE SHEETS INTEGRATION - dm.me.bakery
-// ============================================================
-
-// Your Google Apps Script Web App URL
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzt5j17zwoMJf2-zQAjfcRujZj9z-FXQR4JFhtftcWBlu-GRsdmxp4Ncr8gued_q1WkfA/exec';
-
-// Modified sendToWhatsApp function
-async function sendToWhatsApp() {
-  // Validate date and time first
-  if (!validateDateTime()) {
-    return;
-  }
-  
-  // Ensure summary is up to date
-  updateSummary();
-  
-  // 1. Collect order data
-  const orderData = collectOrderData();
-  
-  // 2. Log to Google Sheets
-  try {
-    const response = await fetch(GOOGLE_SHEETS_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(orderData)
-    });
-    
-    const result = await response.json();
-    if (result.success) {
-      console.log('✅ Order logged to Google Sheets!');
-    } else {
-      console.warn('⚠️ Google Sheets log failed:', result.error);
-      // Still proceed to WhatsApp even if logging fails
-    }
-  } catch (error) {
-    console.warn('⚠️ Could not connect to Google Sheets:', error);
-    // Still proceed to WhatsApp
-  }
-  
-  // 3. Open WhatsApp with pre-filled message
-  const text = document.getElementById('summaryText').textContent;
-  const encoded = encodeURIComponent(text);
-  const phone = '19513153100';
-  const url = `https://wa.me/${phone}?text=${encoded}`;
-  window.open(url, '_blank');
-}
-
-// Collect order data from the form
-function collectOrderData() {
-  const category = document.getElementById('category').value;
-  const size = document.getElementById('size').value;
-  const flavor = document.getElementById('flavor').value;
-  const typeSelect = document.getElementById('typeSelect');
-  const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
-  
-  // Get selected date and time
-  const date = document.getElementById('pickupDate').value;
-  const time = document.getElementById('pickupTime').value;
-  
-  // Get price
-  const price = document.getElementById('priceOutput').textContent;
-  
-  // Get add-ons
-  let addons = [];
-  if (category === 'cake') {
-    document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-      addons.push(cb.value);
-    });
-  }
-  if (category === 'cupcakes') {
-    document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-      addons.push(cb.value);
-    });
-  }
-  
-  // Build product description
-  const catLabels = {
-    'cake': 'Cake',
-    'cupcakes': 'Cupcakes',
-    'breads': 'Bread',
-    'cinnamon-rolls': 'Cinnamon Rolls',
-    'cheesecake': 'Cheesecake',
-    'jeera-biscuits': 'Jeera Biscuits',
-    'cake-cups': 'Cake Cups',
-    'bagels': 'Bagels',
-    'ladi-pav': 'Ladi Pav'
-  };
-  
-  let product = catLabels[category] || category;
-  if (size) product += ` - ${size}`;
-  if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
-  if (vegan) product += ' [VEGAN]';
-  if (addons.length) product += ` + ${addons.join(', ')}`;
-  
-  // Build notes
-  let notes = '';
-  if (date) notes += `Pickup Date: ${date}`;
-  if (time) notes += ` | Time: ${time}`;
-  
-  return {
-    customerName: '',  // User will provide in WhatsApp
-    phoneNumber: '',   // User will provide in WhatsApp  
-    product: product,
-    amount: price,
-    notes: notes
-  };
-}
-
-
-
 </body>
 </html>
