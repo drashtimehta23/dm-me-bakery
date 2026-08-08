@@ -592,12 +592,64 @@
   }
 
   /* Gallery Grid - 4:5 Aspect Ratio */
+  
+  /* Replace your existing gallery-grid styles with: */
+
   .gallery-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     padding: 4px 0;
   }
+
+  /* Mobile: Show 1 image at a time with swipe */
+  @media (max-width: 768px) {
+    .gallery-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+      max-width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .gallery-grid .gallery-item {
+      aspect-ratio: 4/5;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--cream-soft);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .gallery-grid .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Hide individual item hover effects on mobile */
+    .gallery-grid .gallery-item:hover {
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+  }
+
+  /* Tablet: Show 2 images */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .gallery-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+  }
+
+  /* Desktop: Show 3 images */
+  @media (min-width: 1025px) {
+    .gallery-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+  }
+
   .gallery-grid .gallery-item {
     border-radius: 12px;
     overflow: hidden;
@@ -620,7 +672,8 @@
     height: 100%;
     object-fit: cover;
     display: block;
-  }
+  } 
+
   .gallery-grid .gallery-item .placeholder-text {
     display: flex;
     align-items: center;
@@ -765,7 +818,107 @@
     scrollbar-width: thin;
     scrollbar-color: var(--blush) var(--cream-soft);
   }
-   
+  
+  /* Add these styles for the expanded image view */
+
+  .gallery-image-viewer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.92);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .gallery-image-viewer.active {
+    display: flex;
+  }
+  .gallery-image-viewer img {
+    max-width: 95%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    cursor: pointer;
+  }
+  .gallery-image-viewer .viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2.5rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s ease;
+    opacity: 0.8;
+  }
+  .gallery-image-viewer .viewer-close:hover {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  .gallery-image-viewer .viewer-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .gallery-image-viewer .viewer-nav:hover {
+    background: rgba(255,255,255,0.3);
+  }
+  .gallery-image-viewer .viewer-nav.prev {
+    left: 20px;
+  }
+  .gallery-image-viewer .viewer-nav.next {
+    right: 20px;
+  }
+  .gallery-image-viewer .viewer-counter {
+    position: absolute;
+    bottom: 30px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
+    font-family: var(--sans);
+  }
+  @media (max-width: 768px) {
+    .gallery-image-viewer .viewer-nav {
+      width: 40px;
+      height: 40px;
+      font-size: 1.5rem;
+    }
+    .gallery-image-viewer .viewer-nav.prev {
+      left: 10px;
+    }
+    .gallery-image-viewer .viewer-nav.next {
+      right: 10px;
+    }
+    .gallery-image-viewer .viewer-close {
+      top: 10px;
+      right: 15px;
+      font-size: 2rem;
+    }
+    .gallery-image-viewer img {
+      max-height: 70vh;
+    }
+  }
 
   /* Gallery button style - matches Start Over button */
   .gallery-btn {
@@ -1236,6 +1389,15 @@
       <button class="gallery-nav next" id="galleryNext">›</button>
     </div>
   </div>
+</div>
+
+<!-- Add this after the gallery-modal div -->
+<div class="gallery-image-viewer" id="imageViewer">
+  <button class="viewer-close" id="viewerClose">&times;</button>
+  <button class="viewer-nav prev" id="viewerPrev">‹</button>
+  <img id="viewerImage" src="" alt="Viewer">
+  <button class="viewer-nav next" id="viewerNext">›</button>
+  <div class="viewer-counter" id="viewerCounter">1 / 1</div>
 </div>
 
 <!-- ============ FOOTER ============ -->
@@ -1986,8 +2148,10 @@
     }
   };
 
+    // ========== GALLERY VARIABLES ==========
   let currentGalleryImages = [];
   let currentGalleryIndex = 0;
+  let viewerImageIndex = 0;
 
   // ========== GALLERY FUNCTIONS ==========
   function openGallery(category) {
@@ -2026,16 +2190,20 @@
       return;
     }
 
-    // Show only 6 images at a time (2 rows of 3 on desktop, adjust for mobile)
+    // Check if mobile (1 image) or desktop (multiple)
+    const isMobile = window.innerWidth <= 768;
+    const itemsPerPage = isMobile ? 1 : 6;
+    
     const start = currentGalleryIndex;
-    const end = Math.min(start + 6, currentGalleryImages.length);
+    const end = Math.min(start + itemsPerPage, currentGalleryImages.length);
     const visibleImages = currentGalleryImages.slice(start, end);
     
     let html = '';
-    visibleImages.forEach(src => {
+    visibleImages.forEach((src, idx) => {
+      const globalIndex = start + idx;
       html += `
-        <div class="gallery-item">
-          <img src="${src}" alt="gallery" loading="lazy" onclick="window.open('${src}','_blank')">
+        <div class="gallery-item" onclick="openImageViewer(${globalIndex})">
+          <img src="${src}" alt="gallery" loading="lazy">
         </div>
       `;
     });
@@ -2046,30 +2214,97 @@
     nextBtn.style.display = end < currentGalleryImages.length ? 'flex' : 'none';
   }
 
-  function closeGallery() {
-    const modal = document.getElementById('galleryModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+  // ========== IMAGE VIEWER FUNCTIONS ==========
+  function openImageViewer(index) {
+    const viewer = document.getElementById('imageViewer');
+    const img = document.getElementById('viewerImage');
+    const counter = document.getElementById('viewerCounter');
+    
+    viewerImageIndex = index;
+    img.src = currentGalleryImages[index];
+    counter.textContent = `${index + 1} / ${currentGalleryImages.length}`;
+    
+    viewer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Close the gallery modal but keep overlay
+    document.getElementById('galleryModal').classList.remove('active');
   }
 
-  // Gallery navigation
+  function closeImageViewer() {
+    const viewer = document.getElementById('imageViewer');
+    viewer.classList.remove('active');
+    document.body.style.overflow = '';
+    // Reopen gallery modal
+    document.getElementById('galleryModal').classList.add('active');
+  }
+
+  function navigateViewer(direction) {
+    const newIndex = viewerImageIndex + direction;
+    if (newIndex < 0 || newIndex >= currentGalleryImages.length) return;
+    
+    viewerImageIndex = newIndex;
+    const img = document.getElementById('viewerImage');
+    const counter = document.getElementById('viewerCounter');
+    
+    img.src = currentGalleryImages[viewerImageIndex];
+    counter.textContent = `${viewerImageIndex + 1} / ${currentGalleryImages.length}`;
+  }
+
+  // ========== GALLERY NAVIGATION ==========
   document.getElementById('galleryPrev').addEventListener('click', function(e) {
     e.stopPropagation();
+    const isMobile = window.innerWidth <= 768;
+    const itemsPerPage = isMobile ? 1 : 6;
     if (currentGalleryIndex > 0) {
-      currentGalleryIndex = Math.max(0, currentGalleryIndex - 6);
+      currentGalleryIndex = Math.max(0, currentGalleryIndex - itemsPerPage);
       renderGalleryImages();
     }
   });
 
   document.getElementById('galleryNext').addEventListener('click', function(e) {
     e.stopPropagation();
-    if (currentGalleryIndex + 6 < currentGalleryImages.length) {
-      currentGalleryIndex = Math.min(currentGalleryImages.length - 6, currentGalleryIndex + 6);
+    const isMobile = window.innerWidth <= 768;
+    const itemsPerPage = isMobile ? 1 : 6;
+    if (currentGalleryIndex + itemsPerPage < currentGalleryImages.length) {
+      currentGalleryIndex = Math.min(currentGalleryImages.length - itemsPerPage, currentGalleryIndex + itemsPerPage);
       renderGalleryImages();
     }
   });
 
-  // Touch swipe support for gallery
+  // ========== IMAGE VIEWER NAVIGATION ==========
+  document.getElementById('viewerPrev').addEventListener('click', function(e) {
+    e.stopPropagation();
+    navigateViewer(-1);
+  });
+
+  document.getElementById('viewerNext').addEventListener('click', function(e) {
+    e.stopPropagation();
+    navigateViewer(1);
+  });
+
+  document.getElementById('viewerClose').addEventListener('click', closeImageViewer);
+
+  // Close viewer on background click
+  document.getElementById('imageViewer').addEventListener('click', function(e) {
+    if (e.target === this) closeImageViewer();
+  });
+
+  // Keyboard navigation for viewer
+  document.addEventListener('keydown', function(e) {
+    const viewer = document.getElementById('imageViewer');
+    if (!viewer.classList.contains('active')) return;
+    
+    if (e.key === 'Escape') {
+      closeImageViewer();
+    } else if (e.key === 'ArrowLeft') {
+      navigateViewer(-1);
+    } else if (e.key === 'ArrowRight') {
+      navigateViewer(1);
+    }
+  });
+
+  // ========== TOUCH SWIPE FOR GALLERY ==========
   let touchStartX = 0;
   let touchEndX = 0;
 
@@ -2088,6 +2323,30 @@
       }
     }
   }, {passive: true});
+
+  // ========== TOUCH SWIPE FOR VIEWER ==========
+  document.getElementById('viewerImage').addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive: true});
+
+  document.getElementById('viewerImage').addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        navigateViewer(1);
+      } else {
+        navigateViewer(-1);
+      }
+    }
+  }, {passive: true});
+
+  // ========== CLOSE FUNCTIONS ==========
+  function closeGallery() {
+    const modal = document.getElementById('galleryModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
 
   // Close on backdrop click
   document.getElementById('galleryModal').addEventListener('click', function(e) {
@@ -2137,6 +2396,17 @@
         }
       }
     });
+  });
+
+  // Handle window resize for responsive grid
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      if (document.getElementById('galleryModal').classList.contains('active')) {
+        renderGalleryImages();
+      }
+    }, 300);
   });
 
 
