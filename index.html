@@ -175,28 +175,34 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding: 14px 28px;
+    padding: 12px 20px;
     max-width: var(--container);
     margin: 0 auto;
+    gap: 12px;
   }
   .brand{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap: 8px;
     text-decoration:none;
+    flex-shrink: 0;
   }
   .brand img{
-    width: 42px; height:42px; border-radius:50%;
+    width: 36px;
+    height: 36px;
+    border-radius:50%;
     object-fit: cover;
     border: 1.5px solid var(--cream-soft);
+    flex-shrink: 0;
   }
   .brand span{
     font-family: var(--script);
-    font-size: 1.7rem;
+    font-size: 1.4rem;
     color: var(--brown-900);
     line-height: 1;
-    padding-top: 4px;
-  }
+    padding-top: 2px;
+    white-space: nowrap;
+  }   
   .nav-links{
     display:flex;
     align-items:center;
@@ -1120,6 +1126,80 @@
     }
   }
 
+    /* ========== RESPONSIVE LOGO FIX ========== */
+  @media (max-width: 560px) {
+    nav {
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    .brand img {
+      width: 30px;
+      height: 30px;
+    }
+    .brand span {
+      font-size: 1.1rem;
+    }
+    .brand {
+      gap: 6px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .brand img {
+      width: 26px;
+      height: 26px;
+    }
+    .brand span {
+      font-size: 0.95rem;
+    }
+    nav {
+      padding: 8px 10px;
+      gap: 6px;
+    }
+  }
+
+  /* Ensure nav-cta doesn't push logo */
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .nav-toggle {
+    flex-shrink: 0;
+  }
+
+  /* Fix nav links on mobile */
+  @media (max-width: 860px) {
+    .nav-links {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--cream);
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px 20px 26px;
+      gap: 16px;
+      border-bottom: 1px solid rgba(61,43,33,0.08);
+      display: none;
+      width: 100%;
+    }
+    .nav-links.open {
+      display: flex;
+    }
+    .nav-toggle {
+      display: block;
+    }
+    .nav-cta .btn span.long {
+      display: none;
+    }
+    .nav-cta .btn {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+    }
+  }
 </style>
 </head>
 <body>
