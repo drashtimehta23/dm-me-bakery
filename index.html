@@ -175,35 +175,28 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding: 12px 20px;
+    padding: 14px 28px;
     max-width: var(--container);
     margin: 0 auto;
-    gap: 12px;
   }
   .brand{
     display:flex;
     align-items:center;
-    gap: 8px;
+    gap:10px;
     text-decoration:none;
-    flex-shrink: 0;
   }
-  .brand img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+  .brand img{
+    width: 42px; height:42px; border-radius:50%;
     object-fit: cover;
     border: 1.5px solid var(--cream-soft);
-    flex-shrink: 0;
-    align-self: center;  /* Add this - forces vertical centering in flex */
   }
   .brand span{
     font-family: var(--script);
-    font-size: 1.4rem;
+    font-size: 1.7rem;
     color: var(--brown-900);
     line-height: 1;
-    padding-top: 2px;
-    white-space: nowrap;
-  }   
+    padding-top: 4px;
+  }
   .nav-links{
     display:flex;
     align-items:center;
@@ -259,33 +252,11 @@
     padding: 88px 0 96px;
     overflow: hidden;
   }
-  /* Keep it as two columns always */
-  .hero .wrap {
-    display: grid;
-    grid-template-columns: 1.05fr 0.95fr;  /* Keep text left, image right */
+  .hero .wrap{
+    display:grid;
+    grid-template-columns: 1.05fr 0.95fr;
     gap: 56px;
-    align-items: center;
-  }
-
-  /* Don't override the grid on tablet */
-  @media (max-width: 900px) {
-    .hero .wrap {
-      grid-template-columns: 1fr 1fr;  /* Two columns, not one */
-      gap: 30px;
-    }
-    .hero-art {
-      order: 0;  /* Don't reorder */
-    }
-  }
-
-  /* Only change to single column on mobile */
-  @media (max-width: 560px) {
-    .hero .wrap {
-      grid-template-columns: 1fr;
-    }
-    .hero-art {
-      order: -1;  /* Image on top on mobile */
-    }
+    align-items:center;
   }
   .hero h1{
     font-size: clamp(2.3rem, 4.6vw, 3.5rem);
@@ -1149,80 +1120,6 @@
     }
   }
 
-    /* ========== RESPONSIVE LOGO FIX ========== */
-  @media (max-width: 560px) {
-    nav {
-      padding: 10px 14px;
-      gap: 8px;
-    }
-    .brand img {
-      width: 30px;
-      height: 30px;
-    }
-    .brand span {
-      font-size: 1.1rem;
-    }
-    .brand {
-      gap: 6px;
-    }
-  }
-
-  @media (max-width: 400px) {
-    .brand img {
-      width: 26px;
-      height: 26px;
-    }
-    .brand span {
-      font-size: 0.95rem;
-    }
-    nav {
-      padding: 8px 10px;
-      gap: 6px;
-    }
-  }
-
-  /* Ensure nav-cta doesn't push logo */
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .nav-toggle {
-    flex-shrink: 0;
-  }
-
-  /* Fix nav links on mobile */
-  @media (max-width: 860px) {
-    .nav-links {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--cream);
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 20px 20px 26px;
-      gap: 16px;
-      border-bottom: 1px solid rgba(61,43,33,0.08);
-      display: none;
-      width: 100%;
-    }
-    .nav-links.open {
-      display: flex;
-    }
-    .nav-toggle {
-      display: block;
-    }
-    .nav-cta .btn span.long {
-      display: none;
-    }
-    .nav-cta .btn {
-      padding: 8px 14px;
-      font-size: 0.8rem;
-    }
-  }
 </style>
 </head>
 <body>
@@ -1267,10 +1164,10 @@
           <span class="pill"><i></i>Inland Empire, CA</span>
         </div>
 
-        <!-- Hero Actions - Update the Message button -->
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
-        <a class="btn btn-outline" href="#" onclick="sendWhatsAppMessage(event)">Message</a>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
+          <a class="btn btn-outline" href="https://wa.me/19513153100" target="_blank" rel="noopener">Message</a>
+        </div>
       </div>
 
       <div class="hero-art reveal">
@@ -1610,9 +1507,8 @@
         </div>
       </div>
 
-      <!-- Order Actions - Update the Message button -->
       <div class="order-actions">
-        <a class="btn btn-outline" href="#" onclick="sendWhatsAppMessage(event)">Message</a>
+        <a class="btn btn-outline" href="https://wa.me/19513153100" target="_blank" rel="noopener">Message Us</a>
         <a class="btn btn-outline" href="tel:+19513153100">Call Us</a>
       </div>
     </div>
@@ -1675,7 +1571,7 @@
       <h4>Get in touch</h4>
       <ul>
         <li><a href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">@dm.me.bakery on Instagram</a></li>
-        <li><a href="#" onclick="sendWhatsAppMessage(event)">Message</a></li>
+        <li><a href="https://wa.me/19513153100" target="_blank" rel="noopener">Phone: (951) 315-3100</a></li>
       </ul>
     </div>
   </div>
@@ -2267,42 +2163,6 @@
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.getElementById('pickupDate').value = '';
     document.getElementById('pickupTime').value = '';
-  }
-
-  // Add to your JavaScript
-
-  function sendWhatsAppMessage(e) {
-    e.preventDefault();
-    
-    const phone = '19513153100';
-    
-    // Get current date for default
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('en-US', { 
-      month: 'numeric', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
-    
-    const message = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order.
-
-  To get started, please send me the following details:
-  📅 Date needed: ${dateStr}
-  ⏰ Pickup time: 
-  🎂 Product: 
-  🍰 Flavor: 
-  👥 Size: 
-  🥛 Eggless or Plant-Based:
-  🎨 Design/theme:  
-  📍 Pickup location: Eastvale, CA
-
-  📸 If you have a specific design in mind, please send a reference photo as well!
-  Once I have these details, I'll check availability and send you a quote. 💗
-  Thank you for considering DM.Me.Bakery! ✨`;
-    
-    const encoded = encodeURIComponent(message);
-    const url = `https://wa.me/${phone}?text=${encoded}`;
-    window.open(url, '_blank');
   }
 
     // ========== GALLERY DATA ==========
