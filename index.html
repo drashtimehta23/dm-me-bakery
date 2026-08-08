@@ -259,11 +259,33 @@
     padding: 88px 0 96px;
     overflow: hidden;
   }
-  .hero .wrap{
-    display:grid;
-    grid-template-columns: 1.05fr 0.95fr;
+  /* Keep it as two columns always */
+  .hero .wrap {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;  /* Keep text left, image right */
     gap: 56px;
-    align-items:center;
+    align-items: center;
+  }
+
+  /* Don't override the grid on tablet */
+  @media (max-width: 900px) {
+    .hero .wrap {
+      grid-template-columns: 1fr 1fr;  /* Two columns, not one */
+      gap: 30px;
+    }
+    .hero-art {
+      order: 0;  /* Don't reorder */
+    }
+  }
+
+  /* Only change to single column on mobile */
+  @media (max-width: 560px) {
+    .hero .wrap {
+      grid-template-columns: 1fr;
+    }
+    .hero-art {
+      order: -1;  /* Image on top on mobile */
+    }
   }
   .hero h1{
     font-size: clamp(2.3rem, 4.6vw, 3.5rem);
