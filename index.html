@@ -1164,9 +1164,10 @@
           <span class="pill"><i></i>Inland Empire, CA</span>
         </div>
 
+        <!-- Hero section -->
         <div class="hero-actions">
-          <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
-          <a class="btn btn-outline" href="https://wa.me/19513153100" target="_blank" rel="noopener">Message</a>
+          <a class="btn btn-primary" onclick="directMessage()" style="cursor:pointer;">Instagram</a>
+          <a class="btn btn-outline" onclick="directMessage()" style="cursor:pointer;">Message</a>
         </div>
       </div>
 
@@ -1507,8 +1508,9 @@
         </div>
       </div>
 
+      <!-- Order section -->
       <div class="order-actions">
-        <a class="btn btn-outline" href="https://wa.me/19513153100" target="_blank" rel="noopener">Message Us</a>
+        <a class="btn btn-outline" onclick="directMessage()" style="cursor:pointer;">Message Us</a>
         <a class="btn btn-outline" href="tel:+19513153100">Call Us</a>
       </div>
     </div>
@@ -1571,7 +1573,7 @@
       <h4>Get in touch</h4>
       <ul>
         <li><a href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">@dm.me.bakery on Instagram</a></li>
-        <li><a href="https://wa.me/19513153100" target="_blank" rel="noopener">Phone: (951) 315-3100</a></li>
+        <li><a onclick="directMessage()" style="cursor:pointer;">Phone: (951) 315-3100</a></li>
       </ul>
     </div>
   </div>
@@ -2001,169 +2003,336 @@
   }
 
     // ============================================================
-    // COMPLETE - sendToWhatsApp() with INSTANT redirect
+    // OPTIMIZED - Universal Messaging with WhatsApp Detection
     // ============================================================
 
     const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzkTCKAZ5P2WV4JZXiqMeWVrzPHWTlS6N_LZ3Ueop1lX_cX7RCRBbmMWKRJk_Um3gJ1/exec';
+    const PHONE_NUMBER = '19513153100';
 
+    // ========== DETECT WHATSAPP AVAILABILITY ==========
+    function isWhatsAppAvailable() {
+      // Check if on mobile device
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+      
+      // Check if WhatsApp scheme is supported
+      // Most modern browsers on mobile support this check
+      if (isMobile) {
+        // Try to detect WhatsApp installation via user agent
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.indexOf('whatsapp') !== -1) {
+          return true;
+        }
+        
+        // For Android, check if intent is available
+        if (/android/i.test(ua)) {
+          // Android can use intent:// scheme
+          return true;
+        }
+        
+        // For iOS, check if the app is installed (limited detection)
+        if (/iphone|ipad|ipod/i.test(ua)) {
+          // iOS can use the URL scheme
+          return true;
+        }
+      }
+      
+      // Default to true - if it fails, we fall back to SMS
+      return true;
+    }
+
+    // ========== UNIVERSAL MESSAGING FUNCTION ==========
+    function sendMessage(text, trackInSheets = true) {
+      // First, log to Google Sheets (async - doesn't block)
+      if (trackInSheets) {
+        const orderData = collectOrderData();
+        fetch(GOOGLE_SHEETS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        }).catch(() => {});
+      }
+      
+      // Encode the message
+      const encodedText = encodeURIComponent(text || getOrderSummary());
+      
+      // Detect if WhatsApp is likely available
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+      const ua = navigator.userAgent.toLowerCase();
+      const hasWhatsApp = isMobile && (ua.indexOf('whatsapp') !== -1 || /android/i.test(ua) || /iphone|ipad|ipod/i.test(ua));
+      
+      // Choose the best method
+      if (hasWhatsApp && isMobile) {
+        // Try WhatsApp first
+        tryWhatsApp(encodedText);
+      } else {
+        // Fallback to SMS
+        trySMS(encodedText);
+      }
+    }
+
+    // ========== TRY WHATSAPP ==========
+    function tryWhatsApp(encodedText) {
+      // Try multiple WhatsApp URL formats for best compatibility
+      const whatsappUrls = [
+        `https://wa.me/${PHONE_NUMBER}?text=${encodedText}`,
+        `whatsapp://send?phone=${PHONE_NUMBER}&text=${encodedText}`,
+        `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=${encodedText}`
+      ];
+      
+      // Try the primary URL
+      const primaryUrl = whatsappUrls[0];
+      
+      // Open WhatsApp
+      const win = window.open(primaryUrl, '_blank');
+      
+      // Fallback: if window.open doesn't work or closes immediately, try the other methods
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        // Try the API URL (more reliable on some devices)
+        window.location.href = whatsappUrls[2];
+      }
+      
+      // Set a timeout to check if WhatsApp opened successfully
+      // If not, fallback to SMS after 2 seconds
+      setTimeout(() => {
+        // We can't reliably detect if WhatsApp opened, but we can offer SMS as fallback
+        // This is a safety net
+        if (!document.hidden) {
+          // The page is still visible, might not have opened WhatsApp
+          // Offer SMS fallback via a subtle approach
+          trySMS(encodedText);
+        }
+      }, 2000);
+    }
+
+    // ========== TRY SMS ==========
+    function trySMS(encodedText) {
+      // SMS URL with our phone number
+      const smsUrl = `sms:${PHONE_NUMBER}?body=${encodedText}`;
+      
+      // Try to open SMS
+      const win = window.open(smsUrl, '_blank');
+      
+      // If window.open fails, try direct navigation
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = smsUrl;
+      }
+      
+      // If still not working, show a helpful message
+      setTimeout(() => {
+        if (!document.hidden) {
+          // User might not have SMS app configured
+          // Show a helpful message with the phone number and text
+          showFallbackMessage(encodedText);
+        }
+      }, 3000);
+    }
+
+    // ========== FALLBACK MESSAGE ==========
+    function showFallbackMessage(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      const phone = `+1${PHONE_NUMBER}`;
+      
+      // Check if a fallback already exists
+      let fallback = document.getElementById('fallbackMessage');
+      if (!fallback) {
+        fallback = document.createElement('div');
+        fallback.id = 'fallbackMessage';
+        fallback.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--brown-900);
+          color: var(--cream);
+          padding: 20px 24px;
+          border-radius: 16px;
+          z-index: 9999;
+          max-width: 90%;
+          width: 400px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          font-family: var(--sans);
+          text-align: center;
+          animation: slideUp 0.4s ease;
+        `;
+        document.body.appendChild(fallback);
+        
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      fallback.innerHTML = `
+        <div style="margin-bottom:12px; font-size:1.2rem; font-weight:600;">📱 Can't open messenger?</div>
+        <p style="margin-bottom:12px; font-size:0.95rem; opacity:0.9;">
+          Please copy this message and text it to:<br>
+          <strong style="color:var(--blush);">${phone}</strong>
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" 
+                  style="background:var(--blush); color:white; border:none; padding:10px 20px; border-radius:999px; cursor:pointer; font-weight:600;">
+            📋 Copy Message
+          </button>
+          <button onclick="document.getElementById('fallbackMessage').remove()" 
+                  style="background:transparent; color:var(--cream); border:1px solid rgba(255,255,255,0.3); padding:10px 20px; border-radius:999px; cursor:pointer;">
+            Close
+          </button>
+        </div>
+      `;
+    }
+
+    // ========== GET ORDER SUMMARY ==========
+    function getOrderSummary() {
+      const text = document.getElementById('summaryText');
+      return text ? text.textContent : 'I would like to place an order!';
+    }
+
+    // ========== VALIDATE DATE & TIME ==========
+    function validateDateTime() {
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      const category = document.getElementById('category').value;
+      
+      if (!category) {
+        alert('Please select a category first.');
+        return false;
+      }
+      
+      if (!date) {
+        alert('Please select a pickup date.');
+        document.getElementById('pickupDate').focus();
+        return false;
+      }
+      
+      if (!time) {
+        alert('Please select a pickup time.');
+        document.getElementById('pickupTime').focus();
+        return false;
+      }
+      
+      return true;
+    }
+
+    // ========== COLLECT ORDER DATA FOR SHEETS ==========
+    function collectOrderData() {
+      const category = document.getElementById('category').value;
+      const size = document.getElementById('size').value;
+      const flavor = document.getElementById('flavor').value;
+      const typeSelect = document.getElementById('typeSelect');
+      const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+      
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      const price = document.getElementById('priceOutput').textContent;
+      
+      let addons = [];
+      if (category === 'cake') {
+        document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+          addons.push(cb.value);
+        });
+      }
+      if (category === 'cupcakes') {
+        document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+          addons.push(cb.value);
+        });
+      }
+      
+      const catLabels = {
+        'cake': 'Cake',
+        'cupcakes': 'Cupcakes',
+        'breads': 'Bread',
+        'cinnamon-rolls': 'Cinnamon Rolls',
+        'cheesecake': 'Cheesecake',
+        'jeera-biscuits': 'Jeera Biscuits',
+        'cake-cups': 'Cake Cups',
+        'bagels': 'Bagels',
+        'ladi-pav': 'Ladi Pav'
+      };
+      
+      let product = catLabels[category] || category;
+      if (size) product += ` - ${size}`;
+      if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
+      if (vegan) product += ' [VEGAN]';
+      if (addons.length) product += ` + ${addons.join(', ')}`;
+      
+      let notes = '';
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        notes += `Pickup Date: ${dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`;
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        notes += notes ? ` | Time: ${hours}:${minutes} ${ampm}` : `Time: ${hours}:${minutes} ${ampm}`;
+      }
+      
+      return {
+        customerName: '',
+        phoneNumber: '',
+        location: 'Eastvale, CA',
+        occasion: '',
+        product: product,
+        amount: price
+      };
+    }
+
+    // ========== MAIN ORDER FUNCTION ==========
     function sendToWhatsApp() {
-      // Validate date and time
+      // Validate
       if (!validateDateTime()) {
         alert('Please select both a pickup date and time before ordering.');
         return;
       }
       
-      // Ensure summary is up to date
+      // Update summary
       updateSummary();
       
-      // Collect order data for Google Sheets
-      const orderData = collectOrderData();
-      
-      // === OPEN WHATSAPP INSTANTLY (no waiting) ===
+      // Get the message text
       const text = document.getElementById('summaryText').textContent;
-      const encoded = encodeURIComponent(text);
-      const phone = '19513153100';
-      const url = `https://wa.me/${phone}?text=${encoded}`;
-      window.open(url, '_blank');
       
-      // === LOG TO GOOGLE SHEETS IN BACKGROUND ===
-      // This runs separately and doesn't block WhatsApp
-      fetch(GOOGLE_SHEETS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
-      })
-      .catch((error) => {
-        // Silently fail - order still goes through
-        console.warn('⚠️ Google Sheets log failed:', error);
-      });
+      // Send message (handles WhatsApp detection automatically)
+      sendMessage(text, true);
     }
 
-    
-// ============================================================
-// UPDATED: collectOrderData() - matches your sheet columns
-// ============================================================
+    // ========== DIRECT MESSAGE BUTTONS ==========
+    function directMessage() {
+      const text = 'Hi! I would like to place an order with dm.me.bakery!';
+      sendMessage(text, false);
+    }
 
-  function collectOrderData() {
-    const category = document.getElementById('category').value;
-    const size = document.getElementById('size').value;
-    const flavor = document.getElementById('flavor').value;
-    const typeSelect = document.getElementById('typeSelect');
-    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
-    
-    const date = document.getElementById('pickupDate').value;
-    const time = document.getElementById('pickupTime').value;
-    const price = document.getElementById('priceOutput').textContent;
-    
-    // Get add-ons
-    let addons = [];
-    if (category === 'cake') {
-      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-        addons.push(cb.value);
-      });
+    // ========== RESET FUNCTION ==========
+    function resetPricing() {
+      document.getElementById('category').value = '';
+      document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
+      document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
+      document.getElementById('flavor-container').style.display = 'none';
+      document.getElementById('bread-flavor-display').style.display = 'none';
+      document.getElementById('bagel-flavor-display').style.display = 'none';
+      document.getElementById('tier-message').style.display = 'none';
+      document.getElementById('cake-addons').style.display = 'none';
+      document.getElementById('cupcake-addons').style.display = 'none';
+      document.getElementById('type-container').style.display = 'block';
+      document.getElementById('selected-category-text').textContent = '';
+      document.getElementById('step-category').classList.add('active');
+      document.getElementById('step-details').classList.remove('active');
+      document.getElementById('priceOutput').textContent = '$0';
+      document.getElementById('priceLabel').textContent = 'Estimated starting price';
+      document.getElementById('pricingNote').style.display = 'block';
+      document.getElementById('summaryBox').style.display = 'none';
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.getElementById('pickupDate').value = '';
+      document.getElementById('pickupTime').value = '';
     }
-    if (category === 'cupcakes') {
-      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-        addons.push(cb.value);
-      });
-    }
-    
-    // Build product description
-    const catLabels = {
-      'cake': 'Cake',
-      'cupcakes': 'Cupcakes',
-      'breads': 'Bread',
-      'cinnamon-rolls': 'Cinnamon Rolls',
-      'cheesecake': 'Cheesecake',
-      'jeera-biscuits': 'Jeera Biscuits',
-      'cake-cups': 'Cake Cups',
-      'bagels': 'Bagels',
-      'ladi-pav': 'Ladi Pav'
-    };
-    
-    let product = catLabels[category] || category;
-    if (size) product += ` - ${size}`;
-    if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
-    if (vegan) product += ' [VEGAN]';
-    if (addons.length) product += ` + ${addons.join(', ')}`;
-    
-    // Build notes for WhatsApp message
-    let notes = '';
-    if (date) {
-      const dateObj = new Date(date + 'T00:00:00');
-      notes += `Pickup Date: ${dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`;
-    }
-    if (time) {
-      const timeParts = time.split(':');
-      let hours = parseInt(timeParts[0]);
-      const minutes = timeParts[1];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      notes += notes ? ` | Time: ${hours}:${minutes} ${ampm}` : `Time: ${hours}:${minutes} ${ampm}`;
-    }
-    
-    // Return data matching your sheet columns
-    return {
-      customerName: '',        // C: Customer Name - user fills in WhatsApp
-      phoneNumber: '',         // G: Phone Number - user fills in WhatsApp
-      location: 'Eastvale, CA', // F: Location
-      occasion: '',            // H: Occasion - user fills in WhatsApp
-      product: product,        // I: Product
-      amount: price            // J: Amount
-    };
-  }
-
-    // ========== VALIDATE DATE & TIME ==========
-  function validateDateTime() {
-    const date = document.getElementById('pickupDate').value;
-    const time = document.getElementById('pickupTime').value;
-    const category = document.getElementById('category').value;
-    
-    if (!category) {
-      alert('Please select a category first.');
-      return false;
-    }
-    
-    if (!date) {
-      alert('Please select a pickup date.');
-      document.getElementById('pickupDate').focus();
-      return false;
-    }
-    
-    if (!time) {
-      alert('Please select a pickup time.');
-      document.getElementById('pickupTime').focus();
-      return false;
-    }
-    
-    return true;
-  }
-
-  function resetPricing() {
-    document.getElementById('category').value = '';
-    document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
-    document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
-    document.getElementById('flavor-container').style.display = 'none';
-    document.getElementById('bread-flavor-display').style.display = 'none';
-    document.getElementById('bagel-flavor-display').style.display = 'none';
-    document.getElementById('tier-message').style.display = 'none';
-    document.getElementById('cake-addons').style.display = 'none';
-    document.getElementById('cupcake-addons').style.display = 'none';
-    document.getElementById('type-container').style.display = 'block';
-    document.getElementById('selected-category-text').textContent = '';
-    document.getElementById('step-category').classList.add('active');
-    document.getElementById('step-details').classList.remove('active');
-    document.getElementById('priceOutput').textContent = '$0';
-    document.getElementById('priceLabel').textContent = 'Estimated starting price';
-    document.getElementById('pricingNote').style.display = 'block';
-    document.getElementById('summaryBox').style.display = 'none';
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    document.getElementById('pickupDate').value = '';
-    document.getElementById('pickupTime').value = '';
-  }
+   
 
     // ========== GALLERY DATA ==========
   const galleryData = {
