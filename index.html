@@ -2295,13 +2295,20 @@
     }
   };
 
-    // ========== GALLERY VARIABLES ==========
+  // ========== GALLERY VARIABLES ==========
   let currentGalleryImages = [];
   let currentGalleryIndex = 0;
   let viewerImageIndex = 0;
+  let lastTapTime = 0;
+  let currentZoom = 1;
+  let isZoomed = false;
+  let touchStartDistance = 0;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isSwiping = false;
+  let isPinching = false;
 
   // ========== GALLERY FUNCTIONS ==========
-  // Update the openGallery function to set the title properly
   function openGallery(category) {
     const modal = document.getElementById('galleryModal');
     const grid = document.getElementById('galleryGrid');
@@ -2316,18 +2323,17 @@
       return;
     }
 
-    // Set the title - this will show "Cakes" on all screen sizes
     title.textContent = data.title;
     currentGalleryImages = data.images || [];
     currentGalleryIndex = 0;
+    currentZoom = 1;
+    isZoomed = false;
     
     renderGalleryImages();
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
-
-  // Replace renderGalleryImages function:
 
   function renderGalleryImages() {
     const grid = document.getElementById('galleryGrid');
@@ -2341,7 +2347,6 @@
       return;
     }
 
-    // Check if mobile (1 image) or desktop (multiple)
     const isMobile = window.innerWidth <= 480;
     const isTablet = window.innerWidth > 480 && window.innerWidth <= 768;
     const itemsPerPage = isMobile ? 1 : (isTablet ? 2 : 6);
@@ -2361,48 +2366,42 @@
     });
     grid.innerHTML = html;
     
-    // Show/hide navigation buttons
     prevBtn.style.display = currentGalleryIndex > 0 ? 'flex' : 'none';
     nextBtn.style.display = end < currentGalleryImages.length ? 'flex' : 'none';
   }
 
   // ========== IMAGE VIEWER FUNCTIONS ==========
-  // Update the openImageViewer function to prevent zoom:
-
   function openImageViewer(index) {
     const viewer = document.getElementById('imageViewer');
     const img = document.getElementById('viewerImage');
     const counter = document.getElementById('viewerCounter');
     
     viewerImageIndex = index;
+    currentZoom = 1;
+    isZoomed = false;
     img.src = currentGalleryImages[index];
-    counter.textContent = `${index + 1} / ${currentGalleryImages.length}`;
-    
-    // Prevent zoom on iPhone
     img.style.transform = 'scale(1)';
     img.style.webkitTransform = 'scale(1)';
+    img.style.transition = 'transform 0.2s ease';
+    counter.textContent = `${index + 1} / ${currentGalleryImages.length}`;
     
     viewer.classList.add('active');
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     
-    // Close the gallery modal but keep overlay
     document.getElementById('galleryModal').classList.remove('active');
   }
 
-  // Update closeImageViewer:
   function closeImageViewer() {
     const viewer = document.getElementById('imageViewer');
     viewer.classList.remove('active');
     document.body.style.overflow = '';
     document.body.style.position = '';
     document.body.style.width = '';
-    // Reopen gallery modal
     document.getElementById('galleryModal').classList.add('active');
   }
 
-  // Update navigateViewer to prevent zoom:
   function navigateViewer(direction) {
     const newIndex = viewerImageIndex + direction;
     if (newIndex < 0 || newIndex >= currentGalleryImages.length) return;
@@ -2411,34 +2410,263 @@
     const img = document.getElementById('viewerImage');
     const counter = document.getElementById('viewerCounter');
     
-    // Fade transition
+    currentZoom = 1;
+    isZoomed = false;
+    
     img.style.opacity = '0';
+    img.style.transform = 'scale(1)';
+    img.style.webkitTransform = 'scale(1)';
+    
     setTimeout(() => {
       img.src = currentGalleryImages[viewerImageIndex];
-      img.style.transform = 'scale(1)';
-      img.style.webkitTransform = 'scale(1)';
-      counter.textContent = `${viewerImageIndex + 1} / ${currentGalleryImages.length}`;
       img.style.opacity = '1';
+      counter.textContent = `${viewerImageIndex + 1} / ${currentGalleryImages.length}`;
     }, 150);
   }
 
-  // Add double-tap to zoom prevention
-  document.getElementById('viewerImage').addEventListener('dblclick', function(e) {
-    e.preventDefault();
-    // Toggle zoom on double tap
-    const currentScale = this.style.transform === 'scale(2)' ? '1' : '2';
-    this.style.transform = `scale(${currentScale})`;
-    this.style.webkitTransform = `scale(${currentScale})`;
-    this.style.transition = 'transform 0.3s ease';
-  });
+  // ========== ZOOM FUNCTIONS ==========
+  function toggleZoom() {
+    const img = document.getElementById('viewerImage');
+    
+    if (!isZoomed) {
+      // Zoom in
+      currentZoom = 2.5;
+      isZoomed = true;
+      img.style.transform = `scale(${currentZoom})`;
+      img.style.webkitTransform = `scale(${currentZoom})`;
+      img.style.transition = 'transform 0.3s ease';
+      // Enable panning
+      img.style.cursor = 'grab';
+    } else {
+      // Zoom out
+      currentZoom = 1;
+      isZoomed = false;
+      img.style.transform = 'scale(1)';
+      img.style.webkitTransform = 'scale(1)';
+      img.style.transition = 'transform 0.3s ease';
+      img.style.cursor = 'zoom-in';
+      // Reset position
+      img.style.left = '0';
+      img.style.top = '0';
+    }
+  }
 
-  // Prevent pinch zoom on viewer image
-  document.getElementById('viewerImage').addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1) {
+  // ========== TOUCH EVENTS FOR VIEWER ==========
+  function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function handleTouchStart(e) {
+    const img = document.getElementById('viewerImage');
+    const touches = e.touches;
+    
+    if (touches.length === 1) {
+      // Single touch - store for swipe detection
+      touchStartX = touches[0].clientX;
+      touchStartY = touches[0].clientY;
+      isSwiping = false;
+      isPinching = false;
+      
+      // Double tap detection
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+      if (tapLength < 300 && tapLength > 0) {
+        e.preventDefault();
+        toggleZoom();
+        lastTapTime = 0;
+        return;
+      }
+      lastTapTime = currentTime;
+      
+    } else if (touches.length === 2) {
+      // Two touches - pinch to zoom
+      isPinching = true;
+      isSwiping = false;
+      touchStartDistance = getTouchDistance(touches);
       e.preventDefault();
     }
-  }, {passive: false});
+  }
+
+  function handleTouchMove(e) {
+    const img = document.getElementById('viewerImage');
+    const touches = e.touches;
+    
+    if (touches.length === 1 && !isPinching) {
+      // Single touch move - check for swipe
+      const deltaX = touches[0].clientX - touchStartX;
+      const deltaY = touches[0].clientY - touchStartY;
       
+      if (Math.abs(deltaX) > 20 || Math.abs(deltaY) > 20) {
+        isSwiping = true;
+      }
+      
+      // If zoomed, allow panning
+      if (isZoomed && isSwiping) {
+        e.preventDefault();
+        const rect = img.getBoundingClientRect();
+        const maxX = (rect.width * (currentZoom - 1)) / 2;
+        const maxY = (rect.height * (currentZoom - 1)) / 2;
+        
+        let newX = parseFloat(img.style.left) || 0;
+        let newY = parseFloat(img.style.top) || 0;
+        
+        newX += deltaX;
+        newY += deltaY;
+        
+        newX = Math.min(Math.max(newX, -maxX), maxX);
+        newY = Math.min(Math.max(newY, -maxY), maxY);
+        
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+        img.style.position = 'relative';
+        
+        touchStartX = touches[0].clientX;
+        touchStartY = touches[0].clientY;
+      }
+      
+    } else if (touches.length === 2 && isPinching) {
+      // Pinch to zoom
+      e.preventDefault();
+      const currentDistance = getTouchDistance(touches);
+      const scale = currentDistance / touchStartDistance;
+      const newZoom = Math.min(Math.max(currentZoom * scale, 1), 3);
+      
+      if (newZoom !== currentZoom) {
+        currentZoom = newZoom;
+        isZoomed = currentZoom > 1.1;
+        img.style.transform = `scale(${currentZoom})`;
+        img.style.webkitTransform = `scale(${currentZoom})`;
+        img.style.transition = 'none';
+        
+        // Reset position when zooming out
+        if (!isZoomed) {
+          img.style.left = '0';
+          img.style.top = '0';
+          img.style.position = 'relative';
+        }
+      }
+      touchStartDistance = currentDistance;
+    }
+  }
+
+  function handleTouchEnd(e) {
+    const img = document.getElementById('viewerImage');
+    
+    if (isSwiping && !isPinching && !isZoomed) {
+      // Swipe to navigate only when not zoomed
+      const deltaX = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          navigateViewer(-1);
+        } else {
+          navigateViewer(1);
+        }
+      }
+    }
+    
+    isSwiping = false;
+    isPinching = false;
+    
+    // Reset position if zoomed out
+    if (!isZoomed) {
+      img.style.left = '0';
+      img.style.top = '0';
+      img.style.position = 'relative';
+    }
+  }
+
+  // ========== MOUSE EVENTS FOR VIEWER ==========
+  function handleMouseDown(e) {
+    const img = document.getElementById('viewerImage');
+    if (!isZoomed) return;
+    
+    touchStartX = e.clientX;
+    touchStartY = e.clientY;
+    isSwiping = true;
+    img.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+
+  function handleMouseMove(e) {
+    const img = document.getElementById('viewerImage');
+    if (!isSwiping || !isZoomed) return;
+    
+    const deltaX = e.clientX - touchStartX;
+    const deltaY = e.clientY - touchStartY;
+    
+    const rect = img.getBoundingClientRect();
+    const maxX = (rect.width * (currentZoom - 1)) / 2;
+    const maxY = (rect.height * (currentZoom - 1)) / 2;
+    
+    let newX = parseFloat(img.style.left) || 0;
+    let newY = parseFloat(img.style.top) || 0;
+    
+    newX += deltaX;
+    newY += deltaY;
+    
+    newX = Math.min(Math.max(newX, -maxX), maxX);
+    newY = Math.min(Math.max(newY, -maxY), maxY);
+    
+    img.style.left = newX + 'px';
+    img.style.top = newY + 'px';
+    img.style.position = 'relative';
+    
+    touchStartX = e.clientX;
+    touchStartY = e.clientY;
+  }
+
+  function handleMouseUp(e) {
+    const img = document.getElementById('viewerImage');
+    isSwiping = false;
+    img.style.cursor = isZoomed ? 'grab' : 'zoom-in';
+  }
+
+  // ========== ATTACH EVENTS ==========
+  document.addEventListener('DOMContentLoaded', function() {
+    const img = document.getElementById('viewerImage');
+    
+    // Touch events
+    img.addEventListener('touchstart', handleTouchStart, { passive: false });
+    img.addEventListener('touchmove', handleTouchMove, { passive: false });
+    img.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // Mouse events for desktop
+    img.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    // Click to zoom
+    img.addEventListener('click', function(e) {
+      if (!isSwiping) {
+        toggleZoom();
+      }
+    });
+    
+    // Mouse wheel zoom
+    img.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.2 : 0.2;
+      const newZoom = Math.min(Math.max(currentZoom + delta, 1), 3);
+      if (newZoom !== currentZoom) {
+        currentZoom = newZoom;
+        isZoomed = currentZoom > 1.1;
+        this.style.transform = `scale(${currentZoom})`;
+        this.style.webkitTransform = `scale(${currentZoom})`;
+        this.style.transition = 'transform 0.1s ease';
+        this.style.cursor = isZoomed ? 'grab' : 'zoom-in';
+        if (!isZoomed) {
+          this.style.left = '0';
+          this.style.top = '0';
+          this.style.position = 'relative';
+        }
+      }
+    }, { passive: false });
+    
+    // Set initial cursor
+    img.style.cursor = 'zoom-in';
+  });
 
   // ========== GALLERY NAVIGATION ==========
   document.getElementById('galleryPrev').addEventListener('click', function(e) {
@@ -2479,7 +2707,7 @@
     if (e.target === this) closeImageViewer();
   });
 
-  // Keyboard navigation for viewer
+  // Keyboard navigation
   document.addEventListener('keydown', function(e) {
     const viewer = document.getElementById('imageViewer');
     if (!viewer.classList.contains('active')) return;
@@ -2493,43 +2721,6 @@
     }
   });
 
-  // ========== TOUCH SWIPE FOR GALLERY ==========
-  let touchStartX = 0;
-  let touchEndX = 0;
-
-  document.getElementById('galleryGrid').addEventListener('touchstart', function(e) {
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
-
-  document.getElementById('galleryGrid').addEventListener('touchend', function(e) {
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        document.getElementById('galleryNext').click();
-      } else {
-        document.getElementById('galleryPrev').click();
-      }
-    }
-  }, {passive: true});
-
-  // ========== TOUCH SWIPE FOR VIEWER ==========
-  document.getElementById('viewerImage').addEventListener('touchstart', function(e) {
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
-
-  document.getElementById('viewerImage').addEventListener('touchend', function(e) {
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        navigateViewer(1);
-      } else {
-        navigateViewer(-1);
-      }
-    }
-  }, {passive: true});
-
   // ========== CLOSE FUNCTIONS ==========
   function closeGallery() {
     const modal = document.getElementById('galleryModal');
@@ -2537,17 +2728,14 @@
     document.body.style.overflow = '';
   }
 
-  // Close on backdrop click
   document.getElementById('galleryModal').addEventListener('click', function(e) {
     if (e.target === this) closeGallery();
   });
 
-  // Close with Escape key
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeGallery();
   });
 
-  // Close button
   document.getElementById('closeGallery').addEventListener('click', closeGallery);
 
   // ========== ATTACH TO MENU CARDS ==========
@@ -2587,7 +2775,7 @@
     });
   });
 
-  // Handle window resize for responsive grid
+  // Handle window resize
   let resizeTimeout;
   window.addEventListener('resize', function() {
     clearTimeout(resizeTimeout);
