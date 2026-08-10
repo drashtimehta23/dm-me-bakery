@@ -2433,7 +2433,7 @@
    
 
     // ========== UPDATED ORDER FUNCTION (FIXED) ==========
-    async function sendToWhatsApp() {
+    function sendToWhatsApp() {
       console.log('sendToWhatsApp called');
       
       // Validate date and time
@@ -2466,51 +2466,23 @@
       const text = getOrderMessage();
       console.log('Sending message:', text);
       
-      // Collect order data
-      const orderData = await collectOrderData();
-      
-      // Log the data being sent for debugging
-      console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
-      
-      // Try POST first (with no-cors for mobile)
-      let sheetSent = false;
-      try {
-        await fetch(GOOGLE_SHEETS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData)
-        });
-        console.log('✅ Sheet data sent via POST');
-        sheetSent = true;
-      } catch (error) {
-        console.log('❌ POST failed, trying GET:', error);
-      }
-      
-      // If POST failed, try GET as fallback
-      if (!sheetSent) {
-        try {
-          const params = new URLSearchParams();
-          Object.keys(orderData).forEach(key => {
-            params.append(key, orderData[key] || '');
-          });
-          const getUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
-          
-          await fetch(getUrl, {
-            method: 'GET',
-            mode: 'no-cors'
-          });
-          console.log('✅ Sheet data sent via GET (fallback)');
-          sheetSent = true;
-        } catch (error) {
-          console.log('❌ GET fallback also failed:', error);
-        }
-      }
-      
-      // Send the message via WhatsApp/SMS
+      // 🔥 OPEN WHATSAPP/SMS IMMEDIATELY (SYNCHRONOUS)
       sendMessage(text, false);
+      
+      // 🔥 Send to Sheets in background (completely detached)
+      // Use setTimeout to defer sheet sending
+      setTimeout(() => {
+        collectOrderData().then(orderData => {
+          console.log('📤 Sending to Google Sheets (background):', JSON.stringify(orderData, null, 2));
+          
+          fetch(GOOGLE_SHEETS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+          }).catch(() => {});
+        }).catch(() => {});
+      }, 500); // Wait 500ms before sending to sheets
     }
 
     // ========== SEND TO SHEETS VIA GET (MORE RELIABLE ON MOBILE) ==========
