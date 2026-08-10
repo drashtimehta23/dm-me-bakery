@@ -2059,11 +2059,15 @@
         dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
       }
       
-      // Add date/time to the message if present
-      let finalText = text;
+      // Build the final message with the new format
+      let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order. Here is your order summary:\n\n`;
+      
       if (dateTimeStr && !text.includes('Date:')) {
-        finalText = `📅 Pickup: ${dateTimeStr}\n\n${text}`;
+        finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
       }
+      
+      finalText += text;
+      finalText += `\n\nThank you for considering DM.Me.Bakery! ✨`;
       
       console.log('📝 Order Message:', finalText);
       return finalText;
@@ -2670,11 +2674,6 @@
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/60.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/61.png',
         'https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/62.png',
-
-
-
-
-
 
       ]
     },
