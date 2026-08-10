@@ -2040,8 +2040,33 @@
     function getOrderMessage() {
       const summaryText = document.getElementById('summaryText');
       const text = summaryText ? summaryText.textContent : 'I would like to place an order!';
-      console.log('Order message:', text); // Debug log
-      return text;
+      
+      // Get date and time from inputs for the message
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      
+      let dateTimeStr = '';
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        dateTimeStr += dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
+      }
+      
+      // Add date/time to the message if present
+      let finalText = text;
+      if (dateTimeStr && !text.includes('Date:')) {
+        finalText = `📅 Pickup: ${dateTimeStr}\n\n${text}`;
+      }
+      
+      console.log('📝 Order Message:', finalText);
+      return finalText;
     }
 
     // ============================================================
@@ -2074,10 +2099,10 @@
         } else if (data && data.city) {
           return data.city;
         }
-        return 'Eastvale, CA'; // fallback
+        return 'Not Found'; // fallback
       } catch (error) {
         console.log('Location fetch failed, using default:', error);
-        return 'Eastvale, CA'; // fallback
+        return 'Not Found'; // fallback
       }
     }
 
@@ -2345,23 +2370,33 @@
       if (vegan) product += ' [VEGAN]';
       if (addons.length) product += ` + ${addons.join(', ')}`;
       
-      // Format pickup date and time for Google Sheets
-      let pickupDateTime = '';
+      // Format pickup date for Column J
+      let pickupDateFormatted = '';
       if (date) {
         const dateObj = new Date(date + 'T00:00:00');
-        pickupDateTime += dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+        pickupDateFormatted = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
       }
+      
+      // Format pickup time for Column J
+      let pickupTimeFormatted = '';
       if (time) {
         const timeParts = time.split(':');
         let hours = parseInt(timeParts[0]);
         const minutes = timeParts[1];
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
-        const formattedTime = `${hours}:${minutes} ${ampm}`;
-        pickupDateTime += pickupDateTime ? ` @ ${formattedTime}` : formattedTime;
+        pickupTimeFormatted = `${hours}:${minutes} ${ampm}`;
       }
       
-      // Get current date and time for "Date Received" and "Time Received"
+      // Combine date and time for Column J
+      let pickupDateTime = pickupDateFormatted;
+      if (pickupDateFormatted && pickupTimeFormatted) {
+        pickupDateTime = `${pickupDateFormatted} @ ${pickupTimeFormatted}`;
+      } else if (pickupTimeFormatted) {
+        pickupDateTime = pickupTimeFormatted;
+      }
+      
+      // Get current date and time for Columns A and B
       const now = new Date();
       const dateReceived = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
       const timeReceived = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -2369,20 +2404,33 @@
       // Get location from IP address
       const location = await getUserLocation();
       
+      // Clean the price (remove $ sign if present)
+      const cleanPrice = price.replace('$', '').trim();
+      
+      console.log('Order Data being sent:', {
+        dateReceived,
+        timeReceived,
+        location,
+        product,
+        pickupDateTime,  // This goes to Column J
+        amount: cleanPrice // This goes to Column K
+      });
+      
       return {
         dateReceived: dateReceived,           // Column A: Date Received
         timeReceived: timeReceived,           // Column B: Time Received
         customerName: '',                     // Column C: Customer Name
         paymentType: '',                      // Column D: Payment Type
         ageRange: '',                         // Column E: Age Range
-        location: location,                   // Column F: Location (from IP address)
+        location: location,                   // Column F: Location
         phoneNumber: '',                      // Column G: Phone Number
         occasion: '',                         // Column H: Occasion
         product: product,                     // Column I: Product
         pickupDateTime: pickupDateTime,       // Column J: Pick Up Date and Time
-        amount: price                         // Column K: Amount
+        amount: cleanPrice                    // Column K: Amount
       };
     }
+   
 
     // ========== UPDATED ORDER FUNCTION (FIXED) ==========
     async function sendToWhatsApp() {
@@ -2402,47 +2450,44 @@
       
       if (sameDayInfo.isSameDay) {
         if (!sameDayInfo.allowed) {
-          // Same day not allowed for this category - BLOCK the order
           alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
           document.getElementById('pickupDate').focus();
-          return; // <-- EXIT HERE, DO NOT SEND TO SHEETS
+          return;
         } else {
-          // Same day allowed with surcharge - ask for confirmation
           const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
           if (!confirm(confirmMsg)) {
-            return; // <-- EXIT HERE, DO NOT SEND TO SHEETS
+            return;
           }
         }
       }
-      
-      // ============================================================
-      // ONLY PROCEED TO SHEETS IF ORDER IS CONFIRMED
-      // ============================================================
       
       // Proceed with order
       updateSummary();
       const text = getOrderMessage();
       console.log('Sending message:', text);
       
-      // Send to Google Sheets (ONLY for confirmed orders)
-      const orderData = await collectOrderData(); // AWAIT the async function
+      // Collect order data (this is now async)
+      const orderData = await collectOrderData();
       
       // Log the data being sent for debugging
-      console.log('Sending to sheets:', orderData);
+      console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
       
-      fetch(GOOGLE_SHEETS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      }).catch((error) => {
-        console.log('Sheet send error (ignored):', error);
-      });
+      // Send to Google Sheets
+      try {
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        console.log('✅ Sheet data sent (no-cors mode)');
+      } catch (error) {
+        console.log('❌ Sheet send error (ignored):', error);
+      }
       
       // Send the message via WhatsApp/SMS
-      sendMessage(text, false); // Pass false to prevent double-sending to sheets
+      sendMessage(text, false);
     }
-
 
     // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
     function sendInquiry() {
