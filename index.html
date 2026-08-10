@@ -1166,8 +1166,8 @@
 
         <!-- Hero section -->
         <div class="hero-actions">
-          <a class="btn btn-primary" onclick="directMessage()" style="cursor:pointer;">Instagram</a>
-          <a class="btn btn-outline" onclick="directMessage()" style="cursor:pointer;">Message</a>
+          <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
+          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Message</a>
         </div>
       </div>
 
@@ -1510,8 +1510,8 @@
 
       <!-- Order section -->
       <div class="order-actions">
-        <a class="btn btn-outline" onclick="directMessage()" style="cursor:pointer;">Message Us</a>
-        <a class="btn btn-outline" href="tel:+19513153100">Call Us</a>
+          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Message Us</a>
+          <a class="btn btn-outline" href="tel:+19513153100">Call Us</a>
       </div>
     </div>
   </section>
@@ -1572,8 +1572,9 @@
     <div>
       <h4>Get in touch</h4>
       <ul>
-        <li><a href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">@dm.me.bakery on Instagram</a></li>
-        <li><a onclick="directMessage()" style="cursor:pointer;">Phone: (951) 315-3100</a></li>
+          <li><a href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">@dm.me.bakery on Instagram</a></li>
+          <li><a onclick="sendInquiry()" style="cursor:pointer;">Phone: (951) 315-3100</a></li>
+
       </ul>
     </div>
   </div>
@@ -2003,7 +2004,36 @@
   }
 
     // ============================================================
-    // OPTIMIZED - Universal Messaging with WhatsApp Detection
+    // PRE-FILLED MESSAGE TEMPLATES
+    // ============================================================
+
+    // Template for "Message" and "Message Us" buttons (INQUIRY)
+    function getInquiryMessage() {
+      return `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order.
+
+    To get started, please send me the following details:
+    📅 Date needed:
+    ⏰ Pickup time:
+    🎂 Product:
+    👥 Size:
+    🍰 Flavor:
+    🥛 Eggless or Plant-Based:
+    🎨 Design/theme:
+    📍 Pickup location: Eastvale, CA
+
+    📸 If you have a specific design in mind, please send a reference photo as well!
+    Once I have these details, I'll check availability and send you a quote. 💗
+    Thank you for considering DM.Me.Bakery! ✨`;
+    }
+
+    // Template for "Order" button (ORDER SUMMARY with actual details)
+    function getOrderMessage() {
+      const summaryText = document.getElementById('summaryText');
+      return summaryText ? summaryText.textContent : 'I would like to place an order!';
+    }
+
+    // ============================================================
+    // UPDATED MESSAGING FUNCTIONS
     // ============================================================
 
     const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzkTCKAZ5P2WV4JZXiqMeWVrzPHWTlS6N_LZ3Ueop1lX_cX7RCRBbmMWKRJk_Um3gJ1/exec';
@@ -2011,38 +2041,20 @@
 
     // ========== DETECT WHATSAPP AVAILABILITY ==========
     function isWhatsAppAvailable() {
-      // Check if on mobile device
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+      const ua = navigator.userAgent.toLowerCase();
       
-      // Check if WhatsApp scheme is supported
-      // Most modern browsers on mobile support this check
       if (isMobile) {
-        // Try to detect WhatsApp installation via user agent
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.indexOf('whatsapp') !== -1) {
-          return true;
-        }
-        
-        // For Android, check if intent is available
-        if (/android/i.test(ua)) {
-          // Android can use intent:// scheme
-          return true;
-        }
-        
-        // For iOS, check if the app is installed (limited detection)
-        if (/iphone|ipad|ipod/i.test(ua)) {
-          // iOS can use the URL scheme
-          return true;
-        }
+        if (ua.indexOf('whatsapp') !== -1) return true;
+        if (/android/i.test(ua)) return true;
+        if (/iphone|ipad|ipod/i.test(ua)) return true;
       }
-      
-      // Default to true - if it fails, we fall back to SMS
       return true;
     }
 
     // ========== UNIVERSAL MESSAGING FUNCTION ==========
     function sendMessage(text, trackInSheets = true) {
-      // First, log to Google Sheets (async - doesn't block)
+      // Log to Google Sheets (async - doesn't block)
       if (trackInSheets) {
         const orderData = collectOrderData();
         fetch(GOOGLE_SHEETS_URL, {
@@ -2053,53 +2065,34 @@
         }).catch(() => {});
       }
       
-      // Encode the message
-      const encodedText = encodeURIComponent(text || getOrderSummary());
-      
-      // Detect if WhatsApp is likely available
+      const encodedText = encodeURIComponent(text);
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
       const ua = navigator.userAgent.toLowerCase();
       const hasWhatsApp = isMobile && (ua.indexOf('whatsapp') !== -1 || /android/i.test(ua) || /iphone|ipad|ipod/i.test(ua));
       
-      // Choose the best method
       if (hasWhatsApp && isMobile) {
-        // Try WhatsApp first
         tryWhatsApp(encodedText);
       } else {
-        // Fallback to SMS
         trySMS(encodedText);
       }
     }
 
     // ========== TRY WHATSAPP ==========
     function tryWhatsApp(encodedText) {
-      // Try multiple WhatsApp URL formats for best compatibility
       const whatsappUrls = [
         `https://wa.me/${PHONE_NUMBER}?text=${encodedText}`,
         `whatsapp://send?phone=${PHONE_NUMBER}&text=${encodedText}`,
         `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=${encodedText}`
       ];
       
-      // Try the primary URL
-      const primaryUrl = whatsappUrls[0];
+      const win = window.open(whatsappUrls[0], '_blank');
       
-      // Open WhatsApp
-      const win = window.open(primaryUrl, '_blank');
-      
-      // Fallback: if window.open doesn't work or closes immediately, try the other methods
       if (!win || win.closed || typeof win.closed === 'undefined') {
-        // Try the API URL (more reliable on some devices)
         window.location.href = whatsappUrls[2];
       }
       
-      // Set a timeout to check if WhatsApp opened successfully
-      // If not, fallback to SMS after 2 seconds
       setTimeout(() => {
-        // We can't reliably detect if WhatsApp opened, but we can offer SMS as fallback
-        // This is a safety net
         if (!document.hidden) {
-          // The page is still visible, might not have opened WhatsApp
-          // Offer SMS fallback via a subtle approach
           trySMS(encodedText);
         }
       }, 2000);
@@ -2107,22 +2100,15 @@
 
     // ========== TRY SMS ==========
     function trySMS(encodedText) {
-      // SMS URL with our phone number
       const smsUrl = `sms:${PHONE_NUMBER}?body=${encodedText}`;
-      
-      // Try to open SMS
       const win = window.open(smsUrl, '_blank');
       
-      // If window.open fails, try direct navigation
       if (!win || win.closed || typeof win.closed === 'undefined') {
         window.location.href = smsUrl;
       }
       
-      // If still not working, show a helpful message
       setTimeout(() => {
         if (!document.hidden) {
-          // User might not have SMS app configured
-          // Show a helpful message with the phone number and text
           showFallbackMessage(encodedText);
         }
       }, 3000);
@@ -2133,7 +2119,6 @@
       const text = decodeURIComponent(encodedText);
       const phone = `+1${PHONE_NUMBER}`;
       
-      // Check if a fallback already exists
       let fallback = document.getElementById('fallbackMessage');
       if (!fallback) {
         fallback = document.createElement('div');
@@ -2157,7 +2142,6 @@
         `;
         document.body.appendChild(fallback);
         
-        // Add animation
         const style = document.createElement('style');
         style.textContent = `
           @keyframes slideUp {
@@ -2168,6 +2152,8 @@
         document.head.appendChild(style);
       }
       
+      const escapedText = text.replace(/'/g, "\\'").replace(/`/g, '\\`');
+      
       fallback.innerHTML = `
         <div style="margin-bottom:12px; font-size:1.2rem; font-weight:600;">📱 Can't open messenger?</div>
         <p style="margin-bottom:12px; font-size:0.95rem; opacity:0.9;">
@@ -2175,7 +2161,7 @@
           <strong style="color:var(--blush);">${phone}</strong>
         </p>
         <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-          <button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" 
+          <button onclick="navigator.clipboard.writeText('${escapedText}')" 
                   style="background:var(--blush); color:white; border:none; padding:10px 20px; border-radius:999px; cursor:pointer; font-weight:600;">
             📋 Copy Message
           </button>
@@ -2185,12 +2171,6 @@
           </button>
         </div>
       `;
-    }
-
-    // ========== GET ORDER SUMMARY ==========
-    function getOrderSummary() {
-      const text = document.getElementById('summaryText');
-      return text ? text.textContent : 'I would like to place an order!';
     }
 
     // ========== VALIDATE DATE & TIME ==========
@@ -2272,7 +2252,8 @@
         const minutes = timeParts[1];
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
-        notes += notes ? ` | Time: ${hours}:${minutes} ${ampm}` : `Time: ${hours}:${minutes} ${ampm}`;
+        const formattedTime = `${hours}:${minutes} ${ampm}`;
+        notes += notes ? ` | Time: ${formattedTime}` : `Time: ${formattedTime}`;
       }
       
       return {
@@ -2285,28 +2266,59 @@
       };
     }
 
-    // ========== MAIN ORDER FUNCTION ==========
+    // ========== MAIN ORDER FUNCTION (for "Order" button) ==========
     function sendToWhatsApp() {
-      // Validate
       if (!validateDateTime()) {
         alert('Please select both a pickup date and time before ordering.');
         return;
       }
       
-      // Update summary
       updateSummary();
-      
-      // Get the message text
-      const text = document.getElementById('summaryText').textContent;
-      
-      // Send message (handles WhatsApp detection automatically)
-      sendMessage(text, true);
+      const text = getOrderMessage(); // Gets the order summary with actual details
+      sendMessage(text, true); // trackInSheets = true
     }
 
-    // ========== DIRECT MESSAGE BUTTONS ==========
-    function directMessage() {
-      const text = 'Hi! I would like to place an order with dm.me.bakery!';
-      sendMessage(text, false);
+    // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
+    function sendInquiry() {
+      const text = getInquiryMessage(); // Gets the friendly inquiry template
+      sendMessage(text, false); // trackInSheets = false (inquiries don't go to sheets)
+    }
+
+    // ========== UPDATE SUMMARY ==========
+    function updateSummary() {
+      const summaryText = document.getElementById('summaryText');
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      let currentText = summaryText.textContent || '';
+      
+      const lines = currentText.split('\n');
+      const filteredLines = lines.filter(line => 
+        !line.startsWith('Date:') && !line.startsWith('Time:')
+      );
+      
+      let newSummary = filteredLines.join('\n');
+      let dateTimePrefix = '';
+      
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        dateTimePrefix += `Date: ${formattedDate}\n`;
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const formattedTime = `${hours}:${minutes} ${ampm}`;
+        dateTimePrefix += `Time: ${formattedTime}\n`;
+      }
+      
+      if (dateTimePrefix) {
+        newSummary = dateTimePrefix + newSummary;
+      }
+      
+      summaryText.textContent = newSummary;
     }
 
     // ========== RESET FUNCTION ==========
@@ -2332,7 +2344,6 @@
       document.getElementById('pickupDate').value = '';
       document.getElementById('pickupTime').value = '';
     }
-   
 
     // ========== GALLERY DATA ==========
   const galleryData = {
