@@ -1443,14 +1443,16 @@
           <span class="pricing-note" id="pricingNote">*Final price depends on design and custom details. This is not your final price. We'll confirm your final price after you message us the details!</span>
         </div>
 
+        
+
         <!-- Date & Time Fields -->
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(61,43,33,0.08);">
           <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Date</label>
-          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="updateSummary()">
-          
+          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="validateDateInput(); updateSummary();" min="">
           <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Time</label>
           <input type="time" id="pickupTime" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:5px;cursor:pointer;" onchange="updateSummary()">
         </div>
+
 
         <!-- Summary & Copy Box -->
         <div id="summaryBox" class="summary-box" style="display:none;">
@@ -1741,208 +1743,217 @@
     updatePrice();
   }
 
-    function updatePrice() {
-      const category = document.getElementById('category').value;
-      const size = document.getElementById('size').value;
-      const flavor = document.getElementById('flavor').value;
-      const typeSelect = document.getElementById('typeSelect');
-      const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
-      const priceDisplay = document.getElementById('priceOutput');
-      const priceLabel = document.getElementById('priceLabel');
-      const pricingNote = document.getElementById('pricingNote');
-      const breadFlavorText = document.getElementById('bread-flavor-text');
-      const bagelFlavorText = document.getElementById('bagel-flavor-text');
-      const tierMessage = document.getElementById('tier-message');
-      const summaryBox = document.getElementById('summaryBox');
+    // ========== UPDATE PRICE WITH SAME-DAY SURCHARGE ==========
+  function updatePrice() {
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    const priceDisplay = document.getElementById('priceOutput');
+    const priceLabel = document.getElementById('priceLabel');
+    const pricingNote = document.getElementById('pricingNote');
+    const breadFlavorText = document.getElementById('bread-flavor-text');
+    const bagelFlavorText = document.getElementById('bagel-flavor-text');
+    const tierMessage = document.getElementById('tier-message');
+    const summaryBox = document.getElementById('summaryBox');
 
-      const flavorContainer = document.getElementById('flavor-container');
-      const typeContainer = document.getElementById('type-container');
-      const cakeAddons = document.getElementById('cake-addons');
-      const cupcakeAddons = document.getElementById('cupcake-addons');
-      const breadFlavorDisplay = document.getElementById('bread-flavor-display');
-      const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
+    const flavorContainer = document.getElementById('flavor-container');
+    const typeContainer = document.getElementById('type-container');
+    const cakeAddons = document.getElementById('cake-addons');
+    const cupcakeAddons = document.getElementById('cupcake-addons');
+    const breadFlavorDisplay = document.getElementById('bread-flavor-display');
+    const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
 
-      const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
-      if (hideTypeCategories.includes(category)) {
-        typeContainer.style.display = 'none';
-      } else {
-        typeContainer.style.display = 'block';
-      }
-
-      const fixedPriceCategories = ['breads', 'cinnamon-rolls', 'jeera-biscuits', 'bagels', 'ladi-pav'];
-      const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
-
-      if (isTiered) {
-        flavorContainer.style.display = 'none';
-        typeContainer.style.display = 'none';
-        cakeAddons.style.display = 'none';
-        cupcakeAddons.style.display = 'none';
-        breadFlavorDisplay.style.display = 'none';
-        bagelFlavorDisplay.style.display = 'none';
-        tierMessage.style.display = 'block';
-        priceDisplay.textContent = 'Message us';
-        priceLabel.textContent = 'Pricing';
-        pricingNote.style.display = 'none';
-        summaryBox.style.display = 'none';
-        return;
-      }
-
-      if (category === 'cake' || category === 'cupcakes') {
-        flavorContainer.style.display = 'block';
-      }
-      
-      if (category === 'cake') {
-        cakeAddons.style.display = 'block';
-      } else if (category === 'cupcakes') {
-        cupcakeAddons.style.display = 'block';
-      }
-      
-      if (category === 'breads') {
-        breadFlavorDisplay.style.display = 'block';
-        const flavors = breadFlavors[size] || 'Select a valid bread type above.';
-        breadFlavorText.textContent = flavors;
-      }
-      
-      if (category === 'bagels') {
-        bagelFlavorDisplay.style.display = 'block';
-        const flavors = bagelFlavors[size] || 'Select a valid bagel type above.';
-        bagelFlavorText.textContent = flavors;
-      }
-
-      tierMessage.style.display = 'none';
-
-      if (!category || !size) {
-        priceDisplay.textContent = '$0';
-        priceLabel.textContent = 'Estimated starting price';
-        pricingNote.style.display = 'block';
-        summaryBox.style.display = 'none';
-        return;
-      }
-
-      let finalPrice = 0;
-
-      if (category === 'cake') {
-        if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 70;
-        else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 90;
-        else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 110;
-        else if (size.includes('1/4 sheet')) finalPrice = 130;
-        else if (size.includes('1/2 sheet')) finalPrice = 175;
-      }
-      else if (category === 'breads') {
-        if (size.includes('Loaf')) finalPrice = 18;
-        else if (size.includes('Baguette')) finalPrice = 8;
-        else if (size.includes('Sandwich Bread')) finalPrice = 10;
-      }
-      else if (category === 'cake-cups') {
-        const count = parseInt(size);
-        finalPrice = count * 4;
-      }
-      else if (category === 'cupcakes') {
-        if (size.includes('12 Count')) finalPrice = 45;
-        else if (size.includes('24 Count')) finalPrice = 65;
-      }
-      else if (category === 'cheesecake') {
-        if (size.includes('6 inch')) finalPrice = 70;
-        else if (size.includes('8 inch')) finalPrice = 90;
-      }
-      else {
-        finalPrice = priceData[category]?.basePrice || 0;
-      }
-
-      if (category === 'cake') {
-        const checkboxes = document.querySelectorAll('#cake-addons input:checked');
-        checkboxes.forEach(cb => {
-          if (cb.value === 'filling') finalPrice += 10;
-          if (cb.value === 'custom-theme') finalPrice += 20;
-          if (cb.value === 'fondant') finalPrice += 20;
-          if (cb.value === 'faux-flowers') finalPrice += 10;
-          if (cb.value === 'fresh-flowers') finalPrice += 20;
-        });
-      }
-
-      if (category === 'cupcakes') {
-        const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
-        checkboxes.forEach(cb => {
-          if (cb.value === 'filling') finalPrice += 5;
-          if (cb.value === 'cake-topper') finalPrice += 5;
-        });
-      }
-
-      if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
-
-      const catLabels = {
-        'cake': 'Cake',
-        'cupcakes': 'Cupcakes',
-        'breads': 'Bread',
-        'cinnamon-rolls': 'Cinnamon Rolls',
-        'cheesecake': 'Cheesecake',
-        'jeera-biscuits': 'Jeera Biscuits',
-        'cake-cups': 'Cake Cups',
-        'bagels': 'Bagels',
-        'ladi-pav': 'Ladi Pav'
-      };
-
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-
-      let summary = '';
-
-      if (date) {
-        const dateObj = new Date(date + 'T00:00:00');
-        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-        summary += `Date: ${formattedDate}\n`;
-      }
-      if (time) {
-        const timeParts = time.split(':');
-        let hours = parseInt(timeParts[0]);
-        const minutes = timeParts[1];
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        const formattedTime = `${hours}:${minutes} ${ampm}`;
-        summary += `Time: ${formattedTime}\n`;
-      }
-      summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
-      
-      if (flavor && (category === 'cake' || category === 'cupcakes')) {
-        summary += `\nFlavor: ${flavor}`;
-      }
-      if (typeContainer.style.display !== 'none') {
-        if (vegan) summary += `\nType: Vegan (+$15)`;
-        else summary += `\nType: Eggless`;
-      }
-
-      let addonList = [];
-      if (category === 'cake') {
-        document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-          addonList.push(cb.parentElement.textContent.trim());
-        });
-      }
-      if (category === 'cupcakes') {
-        document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-          addonList.push(cb.parentElement.textContent.trim());
-        });
-      }
-      if (addonList.length) {
-        summary += `\nAdd-ons: ${addonList.join(', ')}`;
-      }
-
-      const isFixedPrice = fixedPriceCategories.includes(category);
-
-      if (isFixedPrice) {
-        priceLabel.textContent = 'Price';
-        pricingNote.style.display = 'none';
-        summary += `\nPrice: $${finalPrice}`;
-      } else {
-        priceLabel.textContent = 'Estimated starting price';
-        pricingNote.style.display = 'block';
-        summary += `\nEstimated Price: $${finalPrice}`;
-      }
-
-      document.getElementById('summaryText').textContent = summary;
-      summaryBox.style.display = 'block';
-      priceDisplay.textContent = '$' + finalPrice;
+    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
+    if (hideTypeCategories.includes(category)) {
+      typeContainer.style.display = 'none';
+    } else {
+      typeContainer.style.display = 'block';
     }
+
+    const fixedPriceCategories = ['breads', 'cinnamon-rolls', 'jeera-biscuits', 'bagels', 'ladi-pav'];
+    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
+
+    if (isTiered) {
+      flavorContainer.style.display = 'none';
+      typeContainer.style.display = 'none';
+      cakeAddons.style.display = 'none';
+      cupcakeAddons.style.display = 'none';
+      breadFlavorDisplay.style.display = 'none';
+      bagelFlavorDisplay.style.display = 'none';
+      tierMessage.style.display = 'block';
+      priceDisplay.textContent = 'Message us';
+      priceLabel.textContent = 'Pricing';
+      pricingNote.style.display = 'none';
+      summaryBox.style.display = 'none';
+      return;
+    }
+
+    if (category === 'cake' || category === 'cupcakes') {
+      flavorContainer.style.display = 'block';
+    }
+    
+    if (category === 'cake') {
+      cakeAddons.style.display = 'block';
+    } else if (category === 'cupcakes') {
+      cupcakeAddons.style.display = 'block';
+    }
+    
+    if (category === 'breads') {
+      breadFlavorDisplay.style.display = 'block';
+      const flavors = breadFlavors[size] || 'Select a valid bread type above.';
+      breadFlavorText.textContent = flavors;
+    }
+    
+    if (category === 'bagels') {
+      bagelFlavorDisplay.style.display = 'block';
+      const flavors = bagelFlavors[size] || 'Select a valid bagel type above.';
+      bagelFlavorText.textContent = flavors;
+    }
+
+    tierMessage.style.display = 'none';
+
+    if (!category || !size) {
+      priceDisplay.textContent = '$0';
+      priceLabel.textContent = 'Estimated starting price';
+      pricingNote.style.display = 'block';
+      summaryBox.style.display = 'none';
+      return;
+    }
+
+    let finalPrice = 0;
+
+    if (category === 'cake') {
+      if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 70;
+      else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 90;
+      else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) finalPrice = 110;
+      else if (size.includes('1/4 sheet')) finalPrice = 130;
+      else if (size.includes('1/2 sheet')) finalPrice = 175;
+    }
+    else if (category === 'breads') {
+      if (size.includes('Loaf')) finalPrice = 18;
+      else if (size.includes('Baguette')) finalPrice = 8;
+      else if (size.includes('Sandwich Bread')) finalPrice = 10;
+    }
+    else if (category === 'cake-cups') {
+      const count = parseInt(size);
+      finalPrice = count * 4;
+    }
+    else if (category === 'cupcakes') {
+      if (size.includes('12 Count')) finalPrice = 45;
+      else if (size.includes('24 Count')) finalPrice = 65;
+    }
+    else if (category === 'cheesecake') {
+      if (size.includes('6 inch')) finalPrice = 70;
+      else if (size.includes('8 inch')) finalPrice = 90;
+    }
+    else {
+      finalPrice = priceData[category]?.basePrice || 0;
+    }
+
+    if (category === 'cake') {
+      const checkboxes = document.querySelectorAll('#cake-addons input:checked');
+      checkboxes.forEach(cb => {
+        if (cb.value === 'filling') finalPrice += 10;
+        if (cb.value === 'custom-theme') finalPrice += 20;
+        if (cb.value === 'fondant') finalPrice += 20;
+        if (cb.value === 'faux-flowers') finalPrice += 10;
+        if (cb.value === 'fresh-flowers') finalPrice += 20;
+      });
+    }
+
+    if (category === 'cupcakes') {
+      const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
+      checkboxes.forEach(cb => {
+        if (cb.value === 'filling') finalPrice += 5;
+        if (cb.value === 'cake-topper') finalPrice += 5;
+      });
+    }
+
+    if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
+
+    // ========== ADD SAME-DAY SURCHARGE ==========
+    const sameDayInfo = checkSameDayOrder();
+    let surchargeText = '';
+    if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
+      finalPrice += sameDayInfo.surcharge;
+      surchargeText = ` (+$${sameDayInfo.surcharge} same-day fee)`;
+    }
+
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+
+    let summary = '';
+
+    if (date) {
+      const dateObj = new Date(date + 'T00:00:00');
+      const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+      summary += `Date: ${formattedDate}\n`;
+    }
+    if (time) {
+      const timeParts = time.split(':');
+      let hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const formattedTime = `${hours}:${minutes} ${ampm}`;
+      summary += `Time: ${formattedTime}\n`;
+    }
+    summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
+    
+    if (flavor && (category === 'cake' || category === 'cupcakes')) {
+      summary += `\nFlavor: ${flavor}`;
+    }
+    if (typeContainer.style.display !== 'none') {
+      if (vegan) summary += `\nType: Vegan (+$15)`;
+      else summary += `\nType: Eggless`;
+    }
+
+    let addonList = [];
+    if (category === 'cake') {
+      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+        addonList.push(cb.parentElement.textContent.trim());
+      });
+    }
+    if (category === 'cupcakes') {
+      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+        addonList.push(cb.parentElement.textContent.trim());
+      });
+    }
+    if (addonList.length) {
+      summary += `\nAdd-ons: ${addonList.join(', ')}`;
+    }
+
+    const isFixedPrice = fixedPriceCategories.includes(category);
+
+    if (isFixedPrice) {
+      priceLabel.textContent = 'Price';
+      pricingNote.style.display = 'none';
+      summary += `\nPrice: $${finalPrice}`;
+    } else {
+      priceLabel.textContent = 'Estimated starting price';
+      pricingNote.style.display = 'block';
+      summary += `\nEstimated Price: $${finalPrice}${surchargeText}`;
+    }
+
+    document.getElementById('summaryText').textContent = summary;
+    summaryBox.style.display = 'block';
+    priceDisplay.textContent = '$' + finalPrice;
+  }
    
 
     function updateSummary() {
@@ -2173,6 +2184,57 @@
       `;
     }
 
+    // ============================================================
+    // SAME-DAY ORDER LOGIC
+    // ============================================================
+
+    function checkSameDayOrder() {
+      const category = document.getElementById('category').value;
+      const date = document.getElementById('pickupDate').value;
+      
+      if (!category || !date) return { isSameDay: false, surcharge: 0 };
+      
+      // Get today's date
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Check if selected date is today
+      const isSameDay = date === todayStr;
+      
+      if (!isSameDay) return { isSameDay: false, surcharge: 0 };
+      
+      // Check if category allows same day
+      const sameDayAllowed = ['cake', 'cupcakes'];
+      const sameDayAllowedNames = ['Cake', 'Cupcakes'];
+      const sameDayNotAllowed = ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'cake-cups', 'bagels', 'ladi-pav'];
+      
+      // Get category name for display
+      const catLabels = {
+        'cake': 'Cake',
+        'cupcakes': 'Cupcakes',
+        'breads': 'Bread',
+        'cinnamon-rolls': 'Cinnamon Rolls',
+        'cheesecake': 'Cheesecake',
+        'jeera-biscuits': 'Jeera Biscuits',
+        'cake-cups': 'Cake Cups',
+        'bagels': 'Bagels',
+        'ladi-pav': 'Ladi Pav'
+      };
+      
+      const categoryName = catLabels[category] || category;
+      
+      if (sameDayNotAllowed.includes(category)) {
+        return { isSameDay: true, surcharge: 0, allowed: false, categoryName: categoryName };
+      }
+      
+      // Calculate surcharge
+      let surcharge = 0;
+      if (category === 'cake') surcharge = 20;
+      if (category === 'cupcakes') surcharge = 10;
+      
+      return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
+    }
+
     // ========== VALIDATE DATE & TIME ==========
     function validateDateTime() {
       const date = document.getElementById('pickupDate').value;
@@ -2266,16 +2328,60 @@
       };
     }
 
-    // ========== MAIN ORDER FUNCTION (for "Order" button) ==========
+    // ========== UPDATED ORDER FUNCTION WITH SAME-DAY CHECKS ==========
     function sendToWhatsApp() {
+      // Validate date and time
       if (!validateDateTime()) {
         alert('Please select both a pickup date and time before ordering.');
         return;
       }
       
+      // Check same-day order restrictions
+      const sameDayInfo = checkSameDayOrder();
+      
+      if (sameDayInfo.isSameDay) {
+        if (!sameDayInfo.allowed) {
+          // Same day not allowed for this category
+          alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
+          document.getElementById('pickupDate').focus();
+          return;
+        } else {
+          // Same day allowed with surcharge - confirm with user
+          const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
+          if (!confirm(confirmMsg)) {
+            return;
+          }
+        }
+      }
+      
+      // Proceed with order
       updateSummary();
-      const text = getOrderMessage(); // Gets the order summary with actual details
-      sendMessage(text, true); // trackInSheets = true
+      const text = getOrderMessage();
+      sendMessage(text, true);
+    }
+
+    // ========== DATE INPUT VALIDATION ==========
+    function validateDateInput() {
+      const dateInput = document.getElementById('pickupDate');
+      const date = dateInput.value;
+      
+      if (!date) return;
+      
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Don't allow dates in the past
+      if (date < todayStr) {
+        alert('❌ Please select today or a future date for pickup.');
+        dateInput.value = todayStr;
+        return;
+      }
+      
+      // Update price if category is selected
+      const category = document.getElementById('category').value;
+      if (category) {
+        updatePrice();
+      }
     }
 
     // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
@@ -2966,6 +3072,19 @@
     }, 300);
   });
 
+  // ============================================================
+  // SET MIN DATE FOR PICKUP
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('pickupDate');
+    if (dateInput) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      dateInput.min = `${year}-${month}-${day}`;
+    }
+  });
 
 </script>
 </body>
