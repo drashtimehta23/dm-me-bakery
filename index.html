@@ -2073,7 +2073,7 @@
     // UPDATED MESSAGING FUNCTIONS
     // ============================================================
 
-    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzJD-Wch__iWHmwBs-R_FBRomsdzEystw5OyvoY-ijUkAKHw4CUl8LNmtYUybJeZi2a_w/exec';
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynaJ4VEzYexqDN-KZ10ixxjX_KFaNKNpJVtbB2OrHqDQjcq_uvAMQ3Hx-QQESMDH8TrQ/exec';
     const PHONE_NUMBER = '19513153100';
 
     // ========== DETECT WHATSAPP AVAILABILITY ==========
@@ -2472,33 +2472,81 @@
       // Log the data being sent for debugging
       console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
       
-      // Send to Google Sheets - REMOVE no-cors mode for debugging
+      // Try POST first (with no-cors for mobile)
+      let sheetSent = false;
       try {
-        const response = await fetch(GOOGLE_SHEETS_URL, {
+        await fetch(GOOGLE_SHEETS_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(orderData)
         });
-        
-        // Try to parse the response
-        const result = await response.text();
-        console.log('✅ Sheet response:', result);
-        
-        if (response.ok) {
-          console.log('✅ Sheet saved successfully!');
-        } else {
-          console.log('❌ Sheet returned error:', response.status, result);
-        }
-        
+        console.log('✅ Sheet data sent via POST');
+        sheetSent = true;
       } catch (error) {
-        console.log('❌ Sheet send error:', error);
-        // Still proceed with WhatsApp even if sheet fails
+        console.log('❌ POST failed, trying GET:', error);
+      }
+      
+      // If POST failed, try GET as fallback
+      if (!sheetSent) {
+        try {
+          const params = new URLSearchParams();
+          Object.keys(orderData).forEach(key => {
+            params.append(key, orderData[key] || '');
+          });
+          const getUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
+          
+          await fetch(getUrl, {
+            method: 'GET',
+            mode: 'no-cors'
+          });
+          console.log('✅ Sheet data sent via GET (fallback)');
+          sheetSent = true;
+        } catch (error) {
+          console.log('❌ GET fallback also failed:', error);
+        }
       }
       
       // Send the message via WhatsApp/SMS
       sendMessage(text, false);
+    }
+
+    // ========== SEND TO SHEETS VIA GET (MORE RELIABLE ON MOBILE) ==========
+    async function sendToSheetsViaGet(orderData) {
+      try {
+        // Build query string from order data
+        const params = new URLSearchParams();
+        params.append('dateReceived', orderData.dateReceived || '');
+        params.append('timeReceived', orderData.timeReceived || '');
+        params.append('customerName', orderData.customerName || '');
+        params.append('paymentType', orderData.paymentType || '');
+        params.append('ageRange', orderData.ageRange || '');
+        params.append('location', orderData.location || '');
+        params.append('phoneNumber', orderData.phoneNumber || '');
+        params.append('occasion', orderData.occasion || '');
+        params.append('product', orderData.product || '');
+        params.append('pickupDateTime', orderData.pickupDateTime || '');
+        params.append('amount', orderData.amount || '');
+        
+        // Use GET with query parameters (more reliable on mobile)
+        const url = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
+        
+        console.log('📤 Sending via GET:', url);
+        
+        // Use no-cors mode
+        await fetch(url, {
+          method: 'GET',
+          mode: 'no-cors'
+        });
+        
+        console.log('✅ Sheet data sent via GET');
+        return true;
+      } catch (error) {
+        console.log('❌ GET send error:', error);
+        return false;
+      }
     }
     
 
