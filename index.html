@@ -2466,28 +2466,41 @@
       const text = getOrderMessage();
       console.log('Sending message:', text);
       
-      // Collect order data (this is now async)
+      // Collect order data
       const orderData = await collectOrderData();
       
       // Log the data being sent for debugging
       console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
       
-      // Send to Google Sheets
+      // Send to Google Sheets - REMOVE no-cors mode for debugging
       try {
         const response = await fetch(GOOGLE_SHEETS_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(orderData)
         });
-        console.log('✅ Sheet data sent (no-cors mode)');
+        
+        // Try to parse the response
+        const result = await response.text();
+        console.log('✅ Sheet response:', result);
+        
+        if (response.ok) {
+          console.log('✅ Sheet saved successfully!');
+        } else {
+          console.log('❌ Sheet returned error:', response.status, result);
+        }
+        
       } catch (error) {
-        console.log('❌ Sheet send error (ignored):', error);
+        console.log('❌ Sheet send error:', error);
+        // Still proceed with WhatsApp even if sheet fails
       }
       
       // Send the message via WhatsApp/SMS
       sendMessage(text, false);
     }
+    
 
     // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
     function sendInquiry() {
