@@ -1743,7 +1743,7 @@
     updatePrice();
   }
 
-    // ========== UPDATE PRICE WITH SAME-DAY SURCHARGE ==========
+  // ========== UPDATE PRICE (with same-day logic) ==========
   function updatePrice() {
     const category = document.getElementById('category').value;
     const size = document.getElementById('size').value;
@@ -2185,7 +2185,7 @@
     }
 
     // ============================================================
-    // SAME-DAY ORDER LOGIC
+    // SAME-DAY ORDER LOGIC (FIXED)
     // ============================================================
 
     function checkSameDayOrder() {
@@ -2205,7 +2205,6 @@
       
       // Check if category allows same day
       const sameDayAllowed = ['cake', 'cupcakes'];
-      const sameDayAllowedNames = ['Cake', 'Cupcakes'];
       const sameDayNotAllowed = ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'cake-cups', 'bagels', 'ladi-pav'];
       
       // Get category name for display
@@ -2235,7 +2234,7 @@
       return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
     }
 
-    // ========== VALIDATE DATE & TIME ==========
+    // ========== VALIDATE DATE & TIME (UPDATED) ==========
     function validateDateTime() {
       const date = document.getElementById('pickupDate').value;
       const time = document.getElementById('pickupTime').value;
@@ -2252,6 +2251,15 @@
         return false;
       }
       
+      // Check if date is in the past
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      if (date < todayStr) {
+        alert('❌ Please select today or a future date for pickup.');
+        document.getElementById('pickupDate').focus();
+        return false;
+      }
+      
       if (!time) {
         alert('Please select a pickup time.');
         document.getElementById('pickupTime').focus();
@@ -2259,7 +2267,7 @@
       }
       
       return true;
-    }
+    }    
 
     // ========== COLLECT ORDER DATA FOR SHEETS ==========
     function collectOrderData() {
@@ -2328,7 +2336,8 @@
       };
     }
 
-    // ========== UPDATED ORDER FUNCTION WITH SAME-DAY CHECKS ==========
+     
+    // ========== UPDATED ORDER FUNCTION ==========
     function sendToWhatsApp() {
       // Validate date and time
       if (!validateDateTime()) {
@@ -2341,12 +2350,12 @@
       
       if (sameDayInfo.isSameDay) {
         if (!sameDayInfo.allowed) {
-          // Same day not allowed for this category
+          // Same day not allowed for this category - BLOCK the order
           alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
           document.getElementById('pickupDate').focus();
           return;
         } else {
-          // Same day allowed with surcharge - confirm with user
+          // Same day allowed with surcharge - ask for confirmation
           const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
           if (!confirm(confirmMsg)) {
             return;
@@ -2358,7 +2367,7 @@
       updateSummary();
       const text = getOrderMessage();
       sendMessage(text, true);
-    }
+    }    
 
     // ========== DATE INPUT VALIDATION ==========
     function validateDateInput() {
