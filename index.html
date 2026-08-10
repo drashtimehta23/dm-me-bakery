@@ -1160,7 +1160,7 @@
 
         <div class="pill-row">
           <span class="pill"><i></i>Eggless</span>
-          <span class="pill"><i></i>Dairy Free Options</span>
+          <span class="pill"><i></i>Dairy-Free Options</span>
           <span class="pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Inland Empire, CA</span>
         </div>
 
@@ -2064,18 +2064,9 @@
       return true;
     }
 
-    // ========== UNIVERSAL MESSAGING FUNCTION ==========
-    function sendMessage(text, trackInSheets = true) {
-      // Log to Google Sheets (async - doesn't block)
-      if (trackInSheets) {
-        const orderData = collectOrderData();
-        fetch(GOOGLE_SHEETS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
-        }).catch(() => {});
-      }
+    // ========== ORIGINAL SEND MESSAGE (UPDATED) ==========
+    function sendMessage(text, trackInSheets = false) {
+      // trackInSheets is now false by default since we handle sheets in sendToWhatsApp
       
       const encodedText = encodeURIComponent(text);
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
@@ -2088,7 +2079,7 @@
         trySMS(encodedText);
       }
     }
-
+    
     // ========== TRY WHATSAPP ==========
     function tryWhatsApp(encodedText) {
       const whatsappUrls = [
@@ -2184,9 +2175,9 @@
         </div>
       `;
     }
-
+     
     // ============================================================
-    // SAME-DAY ORDER LOGIC (COMPLETE FIX)
+    // SAME-DAY ORDER LOGIC
     // ============================================================
 
     function checkSameDayOrder() {
@@ -2238,7 +2229,7 @@
       return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
     }
 
-    // ========== DATE INPUT VALIDATION (FIXED - Allows Today) ==========
+    // ========== DATE INPUT VALIDATION ==========
     function validateDateInput() {
       const dateInput = document.getElementById('pickupDate');
       const date = dateInput.value;
@@ -2262,13 +2253,11 @@
       }
     }
 
-    // ========== VALIDATE DATE & TIME (FIXED) ==========
+    // ========== VALIDATE DATE & TIME ==========
     function validateDateTime() {
       const date = document.getElementById('pickupDate').value;
       const time = document.getElementById('pickupTime').value;
       const category = document.getElementById('category').value;
-      
-      console.log('Validating:', { category, date, time }); // Debug log
       
       if (!category) {
         alert('Please select a category first.');
@@ -2299,7 +2288,7 @@
       return true;
     }
 
-    // ========== COLLECT ORDER DATA FOR SHEETS ==========
+    // ========== COLLECT ORDER DATA FOR SHEETS (UPDATED) ==========
     function collectOrderData() {
       const category = document.getElementById('category').value;
       const size = document.getElementById('size').value;
@@ -2341,10 +2330,11 @@
       if (vegan) product += ' [VEGAN]';
       if (addons.length) product += ` + ${addons.join(', ')}`;
       
-      let notes = '';
+      // Format pickup date and time for Google Sheets
+      let pickupDateTime = '';
       if (date) {
         const dateObj = new Date(date + 'T00:00:00');
-        notes += `Pickup Date: ${dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`;
+        pickupDateTime += dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
       }
       if (time) {
         const timeParts = time.split(':');
@@ -2353,62 +2343,87 @@
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
         const formattedTime = `${hours}:${minutes} ${ampm}`;
-        notes += notes ? ` | Time: ${formattedTime}` : `Time: ${formattedTime}`;
+        pickupDateTime += pickupDateTime ? ` @ ${formattedTime}` : formattedTime;
       }
       
+      // Get current date and time for "Date Received" and "Time Received"
+      const now = new Date();
+      const dateReceived = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+      const timeReceived = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      
       return {
-        customerName: '',
-        phoneNumber: '',
-        location: 'Eastvale, CA',
-        occasion: '',
-        product: product,
-        amount: price
+        dateReceived: dateReceived,           // Column A: Date Received
+        timeReceived: timeReceived,           // Column B: Time Received
+        customerName: '',                     // Column C: Customer Name
+        paymentType: '',                      // Column D: Payment Type
+        ageRange: '',                         // Column E: Age Range
+        location: 'Eastvale, CA',             // Column F: Location
+        phoneNumber: '',                      // Column G: Phone Number
+        occasion: '',                         // Column H: Occasion
+        product: product,                     // Column I: Product
+        pickupDateTime: pickupDateTime,       // Column J: Pick Up Date and Time
+        amount: price                         // Column K: Amount
       };
     }
 
-    // ========== UPDATED ORDER FUNCTION ==========
+    // ========== UPDATED ORDER FUNCTION (FIXED) ==========
     function sendToWhatsApp() {
-      console.log('sendToWhatsApp called'); // Debug log
+      console.log('sendToWhatsApp called');
       
       // Validate date and time
       if (!validateDateTime()) {
-        console.log('Validation failed'); // Debug log
+        console.log('Validation failed');
         return;
       }
       
-      console.log('Validation passed'); // Debug log
+      console.log('Validation passed');
       
       // Check same-day order restrictions
       const sameDayInfo = checkSameDayOrder();
-      console.log('Same day info:', sameDayInfo); // Debug log
+      console.log('Same day info:', sameDayInfo);
       
       if (sameDayInfo.isSameDay) {
         if (!sameDayInfo.allowed) {
           // Same day not allowed for this category - BLOCK the order
           alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
           document.getElementById('pickupDate').focus();
-          return;
+          return; // <-- EXIT HERE, DO NOT SEND TO SHEETS
         } else {
           // Same day allowed with surcharge - ask for confirmation
           const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
           if (!confirm(confirmMsg)) {
-            return;
+            return; // <-- EXIT HERE, DO NOT SEND TO SHEETS
           }
         }
       }
       
+      // ============================================================
+      // ONLY PROCEED TO SHEETS IF ORDER IS CONFIRMED
+      // ============================================================
+      
       // Proceed with order
       updateSummary();
       const text = getOrderMessage();
-      console.log('Sending message:', text); // Debug log
-      sendMessage(text, true);
+      console.log('Sending message:', text);
+      
+      // Send to Google Sheets (ONLY for confirmed orders)
+      const orderData = collectOrderData();
+      fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      }).catch(() => {});
+      
+      // Send the message via WhatsApp/SMS
+      sendMessage(text, false); // Pass false to prevent double-sending to sheets
     }
 
 
     // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
     function sendInquiry() {
-      const text = getInquiryMessage(); // Gets the friendly inquiry template
-      sendMessage(text, false); // trackInSheets = false (inquiries don't go to sheets)
+      const text = getInquiryMessage();
+      sendMessage(text, false);
     }
 
     // ========== UPDATE SUMMARY ==========
