@@ -1588,6 +1588,7 @@
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  // ========== NAV TOGGLE ==========
   const toggle = document.getElementById('navToggle');
   const links = document.getElementById('navLinks');
   toggle.addEventListener('click', () => {
@@ -1599,6 +1600,7 @@
     toggle.setAttribute('aria-expanded', false);
   }));
 
+  // ========== REVEAL ON SCROLL ==========
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
   }, { threshold: 0.15 });
@@ -1667,7 +1669,6 @@
     const summaryBox = document.getElementById('summaryBox');
     const selectedCategoryText = document.getElementById('selected-category-text');
 
-    // Reset
     flavorContainer.style.display = 'none';
     breadFlavorDisplay.style.display = 'none';
     bagelFlavorDisplay.style.display = 'none';
@@ -1742,7 +1743,6 @@
     updatePrice();
   }
 
-  // ========== UPDATE PRICE (with same-day logic) ==========
   function updatePrice() {
     const category = document.getElementById('category').value;
     const size = document.getElementById('size').value;
@@ -1872,7 +1872,6 @@
 
     if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
 
-    // ========== ADD SAME-DAY SURCHARGE ==========
     const sameDayInfo = checkSameDayOrder();
     let surchargeText = '';
     if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
@@ -1953,645 +1952,543 @@
     summaryBox.style.display = 'block';
     priceDisplay.textContent = '$' + finalPrice;
   }
-   
 
-    function updateSummary() {
-      const summaryText = document.getElementById('summaryText');
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-      let currentText = summaryText.textContent || '';
-      
-      const lines = currentText.split('\n');
-      const filteredLines = lines.filter(line => 
-        !line.startsWith('Date:') && !line.startsWith('Time:')
-      );
-      
-      let newSummary = filteredLines.join('\n');
-      let dateTimePrefix = '';
-      
-      if (date) {
-        const dateObj = new Date(date + 'T00:00:00');
-        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-        dateTimePrefix += `Date: ${formattedDate}\n`;
-      }
-      if (time) {
-        const timeParts = time.split(':');
-        let hours = parseInt(timeParts[0]);
-        const minutes = timeParts[1];
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        const formattedTime = `${hours}:${minutes} ${ampm}`;
-        dateTimePrefix += `Time: ${formattedTime}\n`;
-      }
-      
-      if (dateTimePrefix) {
-        newSummary = dateTimePrefix + newSummary;
-      }
-      
-      summaryText.textContent = newSummary;
+  function updateSummary() {
+    const summaryText = document.getElementById('summaryText');
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    let currentText = summaryText.textContent || '';
+    
+    const lines = currentText.split('\n');
+    const filteredLines = lines.filter(line => 
+      !line.startsWith('Date:') && !line.startsWith('Time:')
+    );
+    
+    let newSummary = filteredLines.join('\n');
+    let dateTimePrefix = '';
+    
+    if (date) {
+      const dateObj = new Date(date + 'T00:00:00');
+      const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+      dateTimePrefix += `Date: ${formattedDate}\n`;
     }
-      
-  
-    function copySummary() {
-      const text = document.getElementById('summaryText').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.querySelector('.copy-btn');
-        const original = btn.textContent;
-        btn.textContent = '✅ Copied!';
-        setTimeout(() => { btn.textContent = original; }, 2000);
-      }).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = document.getElementById('summaryText').textContent;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        const btn = document.querySelector('.copy-btn');
-        const original = btn.textContent;
-        btn.textContent = '✅ Copied!';
-        setTimeout(() => { btn.textContent = original; }, 2000);
-      });
+    if (time) {
+      const timeParts = time.split(':');
+      let hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const formattedTime = `${hours}:${minutes} ${ampm}`;
+      dateTimePrefix += `Time: ${formattedTime}\n`;
+    }
+    
+    if (dateTimePrefix) {
+      newSummary = dateTimePrefix + newSummary;
+    }
+    
+    summaryText.textContent = newSummary;
   }
 
-    // ============================================================
-    // PRE-FILLED MESSAGE TEMPLATES
-    // ============================================================
-
-    // Template for "Message" and "Message Us" buttons (INQUIRY)
-    function getInquiryMessage() {
-      return `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order.
-
-    To get started, please send me the following details:
-    📅 Date needed:
-    ⏰ Pickup time:
-    🎂 Product:
-    👥 Size:
-    🍰 Flavor:
-    🥛 Eggless or Plant-Based:
-    🎨 Design/theme:
-    📍 Pickup location: Eastvale, CA
-
-    📸 If you have a specific design in mind, please send a reference photo as well!
-    Once I have these details, I'll check availability and send you a quote. 💗
-    Thank you for considering DM.Me.Bakery! ✨`;
+  function checkSameDayOrder() {
+    const category = document.getElementById('category').value;
+    const date = document.getElementById('pickupDate').value;
+    
+    if (!category || !date) {
+      return { isSameDay: false, surcharge: 0, allowed: true };
     }
-
-    // ========== GET ORDER SUMMARY ==========
-    function getOrderMessage() {
-      const summaryText = document.getElementById('summaryText');
-      const text = summaryText ? summaryText.textContent : 'I would like to place an order!';
-      
-      // Get date and time from inputs for the message
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-      
-      let dateTimeStr = '';
-      if (date) {
-        const dateObj = new Date(date + 'T00:00:00');
-        dateTimeStr += dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-      }
-      if (time) {
-        const timeParts = time.split(':');
-        let hours = parseInt(timeParts[0]);
-        const minutes = timeParts[1];
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
-      }
-      
-      // Build the final message with the new format
-      let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order. Here is your order summary:\n\n`;
-      
-      if (dateTimeStr && !text.includes('Date:')) {
-        finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
-      }
-      
-      finalText += text;
-      finalText += `\n\nThank you for considering DM.Me.Bakery! ✨`;
-      
-      console.log('📝 Order Message:', finalText);
-      return finalText;
+    
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const isSameDay = date === todayStr;
+    
+    if (!isSameDay) {
+      return { isSameDay: false, surcharge: 0, allowed: true };
     }
-
-    // ============================================================
-    // UPDATED MESSAGING FUNCTIONS
-    // ============================================================
-
-    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynaJ4VEzYexqDN-KZ10ixxjX_KFaNKNpJVtbB2OrHqDQjcq_uvAMQ3Hx-QQESMDH8TrQ/exec';
-    const PHONE_NUMBER = '19513153100';
-
-    // ========== DETECT WHATSAPP AVAILABILITY ==========
-    function isWhatsAppAvailable() {
-      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
-      const ua = navigator.userAgent.toLowerCase();
-      
-      if (isMobile) {
-        if (ua.indexOf('whatsapp') !== -1) return true;
-        if (/android/i.test(ua)) return true;
-        if (/iphone|ipad|ipod/i.test(ua)) return true;
-      }
-      return true;
+    
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+    
+    const categoryName = catLabels[category] || category;
+    
+    const sameDayNotAllowed = ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'cake-cups', 'bagels', 'ladi-pav'];
+    
+    if (sameDayNotAllowed.includes(category)) {
+      return { isSameDay: true, surcharge: 0, allowed: false, categoryName: categoryName };
     }
+    
+    let surcharge = 0;
+    if (category === 'cake') surcharge = 20;
+    if (category === 'cupcakes') surcharge = 10;
+    
+    return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
+  }
 
-    // ========== GET LOCATION FROM IP ADDRESS ==========
-    async function getUserLocation() {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        if (data && data.city && data.region) {
-          return `${data.city}, ${data.region}`;
-        } else if (data && data.city) {
-          return data.city;
-        }
-        return 'Not Found'; // fallback
-      } catch (error) {
-        console.log('Location fetch failed, using default:', error);
-        return 'Not Found'; // fallback
-      }
+  function validateDateInput() {
+    const dateInput = document.getElementById('pickupDate');
+    const date = dateInput.value;
+    
+    if (!date) return;
+    
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    if (date < todayStr) {
+      alert('❌ Please select today or a future date for pickup.');
+      dateInput.value = todayStr;
+      return;
     }
-
-    // ========== ORIGINAL SEND MESSAGE (UPDATED) ==========
-    function sendMessage(text, trackInSheets = false) {
-      const encodedText = encodeURIComponent(text);
-      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
-      const ua = navigator.userAgent.toLowerCase();
-      const hasWhatsApp = isMobile && (ua.indexOf('whatsapp') !== -1 || /android/i.test(ua) || /iphone|ipad|ipod/i.test(ua));
-      
-      if (hasWhatsApp && isMobile) {
-        tryWhatsApp(encodedText);
-      } else {
-        trySMS(encodedText);
-      }
+    
+    const category = document.getElementById('category').value;
+    if (category) {
+      updatePrice();
     }
+  }
 
-    // ========== TRY WHATSAPP ==========
-    function tryWhatsApp(encodedText) {
-      const whatsappUrls = [
-        `https://wa.me/${PHONE_NUMBER}?text=${encodedText}`,
-        `whatsapp://send?phone=${PHONE_NUMBER}&text=${encodedText}`,
-        `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=${encodedText}`
-      ];
-      
-      const win = window.open(whatsappUrls[0], '_blank');
-      
-      if (!win || win.closed || typeof win.closed === 'undefined') {
-        window.location.href = whatsappUrls[2];
-      }
-      
-      setTimeout(() => {
-        if (!document.hidden) {
-          trySMS(encodedText);
-        }
-      }, 2000);
+  function validateDateTime() {
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    const category = document.getElementById('category').value;
+    
+    if (!category) {
+      alert('Please select a category first.');
+      return false;
     }
-
-    // ========== TRY SMS ==========
-    function trySMS(encodedText) {
-      const smsUrl = `sms:${PHONE_NUMBER}?body=${encodedText}`;
-      const win = window.open(smsUrl, '_blank');
-      
-      if (!win || win.closed || typeof win.closed === 'undefined') {
-        window.location.href = smsUrl;
-      }
-      
-      setTimeout(() => {
-        if (!document.hidden) {
-          showFallbackMessage(encodedText);
-        }
-      }, 3000);
+    
+    if (!date) {
+      alert('Please select a pickup date.');
+      document.getElementById('pickupDate').focus();
+      return false;
     }
-
-    // ========== FALLBACK MESSAGE ==========
-    function showFallbackMessage(encodedText) {
-      const text = decodeURIComponent(encodedText);
-      const phone = `+1${PHONE_NUMBER}`;
-      
-      let fallback = document.getElementById('fallbackMessage');
-      if (!fallback) {
-        fallback = document.createElement('div');
-        fallback.id = 'fallbackMessage';
-        fallback.style.cssText = `
-          position: fixed;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: var(--brown-900);
-          color: var(--cream);
-          padding: 20px 24px;
-          border-radius: 16px;
-          z-index: 9999;
-          max-width: 90%;
-          width: 400px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-          font-family: var(--sans);
-          text-align: center;
-          animation: slideUp 0.4s ease;
-        `;
-        document.body.appendChild(fallback);
-        
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
-          }
-        `;
-        document.head.appendChild(style);
-      }
-      
-      const escapedText = text.replace(/'/g, "\\'").replace(/`/g, '\\`');
-      
-      fallback.innerHTML = `
-        <div style="margin-bottom:12px; font-size:1.2rem; font-weight:600;">📱 Can't open messenger?</div>
-        <p style="margin-bottom:12px; font-size:0.95rem; opacity:0.9;">
-          Please copy this message and text it to:<br>
-          <strong style="color:var(--blush);">${phone}</strong>
-        </p>
-        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-          <button onclick="navigator.clipboard.writeText('${escapedText}')" 
-                  style="background:var(--blush); color:white; border:none; padding:10px 20px; border-radius:999px; cursor:pointer; font-weight:600;">
-            📋 Copy Message
-          </button>
-          <button onclick="document.getElementById('fallbackMessage').remove()" 
-                  style="background:transparent; color:var(--cream); border:1px solid rgba(255,255,255,0.3); padding:10px 20px; border-radius:999px; cursor:pointer;">
-            Close
-          </button>
-        </div>
-      `;
+    
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    if (date < todayStr) {
+      alert('❌ Please select today or a future date for pickup.');
+      document.getElementById('pickupDate').focus();
+      return false;
     }
-
-    // ============================================================
-    // SAME-DAY ORDER LOGIC
-    // ============================================================
-
-    function checkSameDayOrder() {
-      const category = document.getElementById('category').value;
-      const date = document.getElementById('pickupDate').value;
-      
-      if (!category || !date) {
-        return { isSameDay: false, surcharge: 0, allowed: true };
-      }
-      
-      // Get today's date
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      
-      // Check if selected date is today
-      const isSameDay = date === todayStr;
-      
-      if (!isSameDay) {
-        return { isSameDay: false, surcharge: 0, allowed: true };
-      }
-      
-      // Get category name for display
-      const catLabels = {
-        'cake': 'Cake',
-        'cupcakes': 'Cupcakes',
-        'breads': 'Bread',
-        'cinnamon-rolls': 'Cinnamon Rolls',
-        'cheesecake': 'Cheesecake',
-        'jeera-biscuits': 'Jeera Biscuits',
-        'cake-cups': 'Cake Cups',
-        'bagels': 'Bagels',
-        'ladi-pav': 'Ladi Pav'
-      };
-      
-      const categoryName = catLabels[category] || category;
-      
-      // Categories that do NOT allow same day orders
-      const sameDayNotAllowed = ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'cake-cups', 'bagels', 'ladi-pav'];
-      
-      if (sameDayNotAllowed.includes(category)) {
-        return { isSameDay: true, surcharge: 0, allowed: false, categoryName: categoryName };
-      }
-      
-      // Calculate surcharge for allowed categories (cake and cupcakes)
-      let surcharge = 0;
-      if (category === 'cake') surcharge = 20;
-      if (category === 'cupcakes') surcharge = 10;
-      
-      return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
+    
+    if (!time) {
+      alert('Please select a pickup time.');
+      document.getElementById('pickupTime').focus();
+      return false;
     }
+    
+    return true;
+  }
 
-    // ========== DATE INPUT VALIDATION ==========
-    function validateDateInput() {
-      const dateInput = document.getElementById('pickupDate');
-      const date = dateInput.value;
-      
-      if (!date) return;
-      
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      
-      // ONLY block dates in the past (before today)
-      if (date < todayStr) {
-        alert('❌ Please select today or a future date for pickup.');
-        dateInput.value = todayStr;
-        return;
+  // ============================================================
+  // GOOGLE SHEETS INTEGRATION
+  // ============================================================
+  const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbynaJ4VEzYexqDN-KZ10ixxjX_KFaNKNpJVtbB2OrHqDQjcq_uvAMQ3Hx-QQESMDH8TrQ/exec';
+  const PHONE_NUMBER = '19513153100';
+
+  async function getUserLocation() {
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      if (data && data.city && data.region) {
+        return `${data.city}, ${data.region}`;
+      } else if (data && data.city) {
+        return data.city;
       }
-      
-      // If date is valid (today or future), just update the price
-      const category = document.getElementById('category').value;
-      if (category) {
-        updatePrice();
-      }
+      return 'Not Found';
+    } catch (error) {
+      console.log('Location fetch failed, using default:', error);
+      return 'Not Found';
     }
+  }
 
-    // ========== VALIDATE DATE & TIME ==========
-    function validateDateTime() {
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-      const category = document.getElementById('category').value;
-      
-      if (!category) {
-        alert('Please select a category first.');
-        return false;
-      }
-      
-      if (!date) {
-        alert('Please select a pickup date.');
-        document.getElementById('pickupDate').focus();
-        return false;
-      }
-      
-      // Check if date is in the past
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      if (date < todayStr) {
-        alert('❌ Please select today or a future date for pickup.');
-        document.getElementById('pickupDate').focus();
-        return false;
-      }
-      
-      if (!time) {
-        alert('Please select a pickup time.');
-        document.getElementById('pickupTime').focus();
-        return false;
-      }
-      
-      return true;
+  async function collectOrderData() {
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    const price = document.getElementById('priceOutput').textContent;
+    
+    let addons = [];
+    if (category === 'cake') {
+      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
     }
+    if (category === 'cupcakes') {
+      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
+    }
+    
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+    
+    let product = catLabels[category] || category;
+    if (size) product += ` - ${size}`;
+    if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
+    if (vegan) product += ' [VEGAN]';
+    if (addons.length) product += ` + ${addons.join(', ')}`;
+    
+    let pickupDateFormatted = '';
+    if (date) {
+      const dateObj = new Date(date + 'T00:00:00');
+      pickupDateFormatted = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    }
+    
+    let pickupTimeFormatted = '';
+    if (time) {
+      const timeParts = time.split(':');
+      let hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      pickupTimeFormatted = `${hours}:${minutes} ${ampm}`;
+    }
+    
+    let pickupDateTime = pickupDateFormatted;
+    if (pickupDateFormatted && pickupTimeFormatted) {
+      pickupDateTime = `${pickupDateFormatted} @ ${pickupTimeFormatted}`;
+    } else if (pickupTimeFormatted) {
+      pickupDateTime = pickupTimeFormatted;
+    }
+    
+    const now = new Date();
+    const dateReceived = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    const timeReceived = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    
+    const location = await getUserLocation();
+    const cleanPrice = price.replace('$', '').trim();
+    
+    return {
+      dateReceived: dateReceived,
+      timeReceived: timeReceived,
+      customerName: '',
+      paymentType: '',
+      ageRange: '',
+      location: location,
+      phoneNumber: '',
+      occasion: '',
+      product: product,
+      pickupDateTime: pickupDateTime,
+      amount: cleanPrice
+    };
+  }
 
-    // collect order //
-    async function collectOrderData() {
-      const category = document.getElementById('category').value;
-      const size = document.getElementById('size').value;
-      const flavor = document.getElementById('flavor').value;
-      const typeSelect = document.getElementById('typeSelect');
-      const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+  async function sendToSheets(orderData) {
+    try {
+      const params = new URLSearchParams();
+      params.append('dateReceived', orderData.dateReceived || '');
+      params.append('timeReceived', orderData.timeReceived || '');
+      params.append('customerName', orderData.customerName || '');
+      params.append('paymentType', orderData.paymentType || '');
+      params.append('ageRange', orderData.ageRange || '');
+      params.append('location', orderData.location || '');
+      params.append('phoneNumber', orderData.phoneNumber || '');
+      params.append('occasion', orderData.occasion || '');
+      params.append('product', orderData.product || '');
+      params.append('pickupDateTime', orderData.pickupDateTime || '');
+      params.append('amount', orderData.amount || '');
       
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-      const price = document.getElementById('priceOutput').textContent;
+      const url = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
       
-      let addons = [];
-      if (category === 'cake') {
-        document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-          addons.push(cb.value);
-        });
-      }
-      if (category === 'cupcakes') {
-        document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-          addons.push(cb.value);
-        });
-      }
+      console.log('📤 Sending to Google Sheets:', url);
       
-      const catLabels = {
-        'cake': 'Cake',
-        'cupcakes': 'Cupcakes',
-        'breads': 'Bread',
-        'cinnamon-rolls': 'Cinnamon Rolls',
-        'cheesecake': 'Cheesecake',
-        'jeera-biscuits': 'Jeera Biscuits',
-        'cake-cups': 'Cake Cups',
-        'bagels': 'Bagels',
-        'ladi-pav': 'Ladi Pav'
-      };
-      
-      let product = catLabels[category] || category;
-      if (size) product += ` - ${size}`;
-      if (flavor && (category === 'cake' || category === 'cupcakes')) product += ` (${flavor})`;
-      if (vegan) product += ' [VEGAN]';
-      if (addons.length) product += ` + ${addons.join(', ')}`;
-      
-      // Format pickup date for Column J
-      let pickupDateFormatted = '';
-      if (date) {
-        const dateObj = new Date(date + 'T00:00:00');
-        pickupDateFormatted = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-      }
-      
-      // Format pickup time for Column J
-      let pickupTimeFormatted = '';
-      if (time) {
-        const timeParts = time.split(':');
-        let hours = parseInt(timeParts[0]);
-        const minutes = timeParts[1];
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        pickupTimeFormatted = `${hours}:${minutes} ${ampm}`;
-      }
-      
-      // Combine date and time for Column J
-      let pickupDateTime = pickupDateFormatted;
-      if (pickupDateFormatted && pickupTimeFormatted) {
-        pickupDateTime = `${pickupDateFormatted} @ ${pickupTimeFormatted}`;
-      } else if (pickupTimeFormatted) {
-        pickupDateTime = pickupTimeFormatted;
-      }
-      
-      // Get current date and time for Columns A and B
-      const now = new Date();
-      const dateReceived = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-      const timeReceived = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-      
-      // Get location from IP address
-      const location = await getUserLocation();
-      
-      // Clean the price (remove $ sign if present)
-      const cleanPrice = price.replace('$', '').trim();
-      
-      console.log('Order Data being sent:', {
-        dateReceived,
-        timeReceived,
-        location,
-        product,
-        pickupDateTime,  // This goes to Column J
-        amount: cleanPrice // This goes to Column K
+      await fetch(url, {
+        method: 'GET',
+        mode: 'no-cors'
       });
       
-      return {
-        dateReceived: dateReceived,           // Column A: Date Received
-        timeReceived: timeReceived,           // Column B: Time Received
-        customerName: '',                     // Column C: Customer Name
-        paymentType: '',                      // Column D: Payment Type
-        ageRange: '',                         // Column E: Age Range
-        location: location,                   // Column F: Location
-        phoneNumber: '',                      // Column G: Phone Number
-        occasion: '',                         // Column H: Occasion
-        product: product,                     // Column I: Product
-        pickupDateTime: pickupDateTime,       // Column J: Pick Up Date and Time
-        amount: cleanPrice                    // Column K: Amount
-      };
+      console.log('✅ Sheet data sent successfully');
+      return true;
+    } catch (error) {
+      console.log('❌ Sheet send error:', error);
+      return false;
     }
-   
+  }
 
-    // ========== UPDATED ORDER FUNCTION (FIXED) ==========
-    function sendToWhatsApp() {
-      console.log('sendToWhatsApp called');
-      
-      // Validate date and time
-      if (!validateDateTime()) {
-        console.log('Validation failed');
-        return;
-      }
-      
-      console.log('Validation passed');
-      
-      // Check same-day order restrictions
-      const sameDayInfo = checkSameDayOrder();
-      console.log('Same day info:', sameDayInfo);
-      
-      if (sameDayInfo.isSameDay) {
-        if (!sameDayInfo.allowed) {
-          alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
-          document.getElementById('pickupDate').focus();
-          return;
-        } else {
-          const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
-          if (!confirm(confirmMsg)) {
-            return;
-          }
-        }
-      }
-      
-      // Proceed with order
-      updateSummary();
-      const text = getOrderMessage();
-      console.log('Sending message:', text);
-      
-      // 🔥 OPEN WHATSAPP/SMS IMMEDIATELY (SYNCHRONOUS)
-      sendMessage(text, false);
-      
-      // 🔥 Send to Sheets in background (completely detached)
-      // Use setTimeout to defer sheet sending
-      setTimeout(() => {
-        collectOrderData().then(orderData => {
-          console.log('📤 Sending to Google Sheets (background):', JSON.stringify(orderData, null, 2));
-          
-          fetch(GOOGLE_SHEETS_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-          }).catch(() => {});
-        }).catch(() => {});
-      }, 500); // Wait 500ms before sending to sheets
+  // ============================================================
+  // 🔥 FIXED MESSAGING FUNCTIONS
+  // ============================================================
+
+  function getInquiryMessage() {
+    return `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order.
+
+To get started, please send me the following details:
+📅 Date needed:
+⏰ Pickup time:
+🎂 Product:
+👥 Size:
+🍰 Flavor:
+🥛 Eggless or Plant-Based:
+🎨 Design/theme:
+📍 Pickup location: Eastvale, CA
+
+📸 If you have a specific design in mind, please send a reference photo as well!
+Once I have these details, I'll check availability and send you a quote. 💗
+Thank you for considering DM.Me.Bakery! ✨`;
+  }
+
+  function getOrderMessage() {
+    const summaryText = document.getElementById('summaryText');
+    const text = summaryText ? summaryText.textContent : 'I would like to place an order!';
+    
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    
+    let dateTimeStr = '';
+    if (date) {
+      const dateObj = new Date(date + 'T00:00:00');
+      dateTimeStr += dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
     }
+    if (time) {
+      const timeParts = time.split(':');
+      let hours = parseInt(timeParts[0]);
+      const minutes = timeParts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
+    }
+    
+    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order. Here is your order summary:\n\n`;
+    
+    if (dateTimeStr && !text.includes('Date:')) {
+      finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
+    }
+    
+    finalText += text;
+    finalText += `\n\nThank you for considering DM.Me.Bakery! ✨`;
+    
+    return finalText;
+  }
 
-    // ========== SEND TO SHEETS VIA GET (MORE RELIABLE ON MOBILE) ==========
-    async function sendToSheetsViaGet(orderData) {
+  // 🔥 DETECT IF WHATSAPP IS AVAILABLE
+  function isWhatsAppAvailable() {
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(ua);
+    
+    // If not mobile, use WhatsApp Web (desktop)
+    if (!isMobile) return true;
+    
+    // On mobile, check if WhatsApp is installed
+    // Android: check if the app is installed via intent detection
+    // iOS: check via user agent or scheme detection
+    if (/android/i.test(ua)) {
+      // On Android, we can try to detect if WhatsApp is installed
+      // If the user agent contains "w", it might be WhatsApp WebView
+      if (ua.indexOf('whatsapp') !== -1) return true;
+      
+      // For Android, we'll attempt to use the intent URL and fallback to SMS if it fails
+      // We'll return true to try WhatsApp first
+      return true;
+    }
+    
+    if (/iphone|ipad|ipod/i.test(ua)) {
+      // On iOS, check if WhatsApp is installed
+      // If the user agent contains "w", it might be WhatsApp WebView
+      if (ua.indexOf('whatsapp') !== -1) return true;
+      
+      // On iOS, we'll try to use the whatsapp:// scheme and fallback to SMS
+      return true;
+    }
+    
+    return true; // Default to trying WhatsApp
+  }
+
+  // 🔥 DETECT IF MOBILE DEVICE
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+  }
+
+  // 🔥 MAIN FUNCTION TO SEND MESSAGE
+  function sendMessage(text, trackInSheets = false) {
+    const encodedText = encodeURIComponent(text);
+    const isMobile = isMobileDevice();
+    const hasWhatsApp = isWhatsAppAvailable();
+    
+    console.log('📱 isMobile:', isMobile);
+    console.log('💬 hasWhatsApp:', hasWhatsApp);
+    
+    if (isMobile) {
+      if (hasWhatsApp) {
+        // 🔥 Try WhatsApp first on mobile
+        openWhatsApp(encodedText);
+      } else {
+        // 🔥 Fallback to SMS
+        openSMS(encodedText);
+      }
+    } else {
+      // 🔥 Desktop: always use WhatsApp Web
+      openWhatsApp(encodedText);
+    }
+  }
+
+  // 🔥 OPEN WHATSAPP
+  function openWhatsApp(encodedText) {
+    const urls = [
+      `https://wa.me/${PHONE_NUMBER}?text=${encodedText}`,
+      `whatsapp://send?phone=${PHONE_NUMBER}&text=${encodedText}`,
+      `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=${encodedText}`
+    ];
+    
+    let opened = false;
+    
+    // Try each URL
+    for (const url of urls) {
       try {
-        // Build query string from order data
-        const params = new URLSearchParams();
-        params.append('dateReceived', orderData.dateReceived || '');
-        params.append('timeReceived', orderData.timeReceived || '');
-        params.append('customerName', orderData.customerName || '');
-        params.append('paymentType', orderData.paymentType || '');
-        params.append('ageRange', orderData.ageRange || '');
-        params.append('location', orderData.location || '');
-        params.append('phoneNumber', orderData.phoneNumber || '');
-        params.append('occasion', orderData.occasion || '');
-        params.append('product', orderData.product || '');
-        params.append('pickupDateTime', orderData.pickupDateTime || '');
-        params.append('amount', orderData.amount || '');
-        
-        // Use GET with query parameters (more reliable on mobile)
-        const url = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
-        
-        console.log('📤 Sending via GET:', url);
-        
-        // Use no-cors mode
-        await fetch(url, {
-          method: 'GET',
-          mode: 'no-cors'
-        });
-        
-        console.log('✅ Sheet data sent via GET');
-        return true;
-      } catch (error) {
-        console.log('❌ GET send error:', error);
-        return false;
+        const win = window.open(url, '_blank');
+        if (win && !win.closed) {
+          opened = true;
+          break;
+        }
+      } catch(e) {
+        console.log('WhatsApp attempt failed:', e);
       }
     }
     
-
-    // ========== INQUIRY FUNCTION (for "Message" and "Message Us") ==========
-    function sendInquiry() {
-      const text = getInquiryMessage();
-      sendMessage(text, false);
+    // If WhatsApp failed on mobile, fallback to SMS
+    if (!opened && isMobileDevice()) {
+      console.log('WhatsApp failed, falling back to SMS');
+      openSMS(encodedText);
     }
+  }
 
-    // ========== UPDATE SUMMARY ==========
-    function updateSummary() {
-      const summaryText = document.getElementById('summaryText');
-      const date = document.getElementById('pickupDate').value;
-      const time = document.getElementById('pickupTime').value;
-      let currentText = summaryText.textContent || '';
-      
-      const lines = currentText.split('\n');
-      const filteredLines = lines.filter(line => 
-        !line.startsWith('Date:') && !line.startsWith('Time:')
-      );
-      
-      let newSummary = filteredLines.join('\n');
-      let dateTimePrefix = '';
-      
-      if (date) {
-        const dateObj = new Date(date + 'T00:00:00');
-        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-        dateTimePrefix += `Date: ${formattedDate}\n`;
+  // 🔥 OPEN SMS
+  function openSMS(encodedText) {
+    const text = decodeURIComponent(encodedText);
+    const smsUrl = `sms:${PHONE_NUMBER}?body=${encodedText}`;
+    
+    try {
+      const win = window.open(smsUrl, '_blank');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = smsUrl;
       }
-      if (time) {
-        const timeParts = time.split(':');
-        let hours = parseInt(timeParts[0]);
-        const minutes = timeParts[1];
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
-        const formattedTime = `${hours}:${minutes} ${ampm}`;
-        dateTimePrefix += `Time: ${formattedTime}\n`;
-      }
-      
-      if (dateTimePrefix) {
-        newSummary = dateTimePrefix + newSummary;
-      }
-      
-      summaryText.textContent = newSummary;
+    } catch(e) {
+      console.log('SMS attempt failed:', e);
+      // Ultimate fallback: copy to clipboard
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 Message copied to clipboard!\n\nPlease text it to: +1' + PHONE_NUMBER);
+      }).catch(() => {
+        alert('📋 Please copy this message and send it to +1' + PHONE_NUMBER + ':\n\n' + text);
+      });
     }
+  }
 
-    // ========== RESET FUNCTION ==========
-    function resetPricing() {
-      document.getElementById('category').value = '';
-      document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
-      document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
-      document.getElementById('flavor-container').style.display = 'none';
-      document.getElementById('bread-flavor-display').style.display = 'none';
-      document.getElementById('bagel-flavor-display').style.display = 'none';
-      document.getElementById('tier-message').style.display = 'none';
-      document.getElementById('cake-addons').style.display = 'none';
-      document.getElementById('cupcake-addons').style.display = 'none';
-      document.getElementById('type-container').style.display = 'block';
-      document.getElementById('selected-category-text').textContent = '';
-      document.getElementById('step-category').classList.add('active');
-      document.getElementById('step-details').classList.remove('active');
-      document.getElementById('priceOutput').textContent = '$0';
-      document.getElementById('priceLabel').textContent = 'Estimated starting price';
-      document.getElementById('pricingNote').style.display = 'block';
-      document.getElementById('summaryBox').style.display = 'none';
-      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.getElementById('pickupDate').value = '';
-      document.getElementById('pickupTime').value = '';
+  // ============================================================
+  // ORDER & INQUIRY FUNCTIONS
+  // ============================================================
+
+  function sendToWhatsApp() {
+    console.log('sendToWhatsApp called');
+    
+    if (!validateDateTime()) {
+      console.log('Validation failed');
+      return;
     }
+    
+    console.log('Validation passed');
+    
+    const sameDayInfo = checkSameDayOrder();
+    console.log('Same day info:', sameDayInfo);
+    
+    if (sameDayInfo.isSameDay) {
+      if (!sameDayInfo.allowed) {
+        alert(`❌ Same day order for "${sameDayInfo.categoryName}" is not available.\n\nPlease select a future date for your order. We need at least 24 hours notice for ${sameDayInfo.categoryName}.`);
+        document.getElementById('pickupDate').focus();
+        return;
+      } else {
+        const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
+        if (!confirm(confirmMsg)) {
+          return;
+        }
+      }
+    }
+    
+    updateSummary();
+    const text = getOrderMessage();
+    console.log('Sending message:', text);
+    
+    // 🔥 Send to Google Sheets FIRST
+    collectOrderData().then(orderData => {
+      console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
+      sendToSheets(orderData);
+    }).catch(err => {
+      console.log('Error collecting order data:', err);
+    });
+    
+    // 🔥 Then send the message
+    sendMessage(text, false);
+  }
+
+  function sendInquiry() {
+    const text = getInquiryMessage();
+    
+    // 🔥 Send inquiry to Google Sheets too
+    collectOrderData().then(orderData => {
+      if (orderData && orderData.product) {
+        sendToSheets(orderData);
+      }
+    }).catch(() => {});
+    
+    sendMessage(text, false);
+  }
+
+  function resetPricing() {
+    document.getElementById('category').value = '';
+    document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
+    document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
+    document.getElementById('flavor-container').style.display = 'none';
+    document.getElementById('bread-flavor-display').style.display = 'none';
+    document.getElementById('bagel-flavor-display').style.display = 'none';
+    document.getElementById('tier-message').style.display = 'none';
+    document.getElementById('cake-addons').style.display = 'none';
+    document.getElementById('cupcake-addons').style.display = 'none';
+    document.getElementById('type-container').style.display = 'block';
+    document.getElementById('selected-category-text').textContent = '';
+    document.getElementById('step-category').classList.add('active');
+    document.getElementById('step-details').classList.remove('active');
+    document.getElementById('priceOutput').textContent = '$0';
+    document.getElementById('priceLabel').textContent = 'Estimated starting price';
+    document.getElementById('pricingNote').style.display = 'block';
+    document.getElementById('summaryBox').style.display = 'none';
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('pickupDate').value = '';
+    document.getElementById('pickupTime').value = '';
+  }
+
+    // ============================================================
+    // SET MIN DATE FOR PICKUP
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+      const dateInput = document.getElementById('pickupDate');
+      if (dateInput) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        dateInput.min = `${year}-${month}-${day}`;
+      }
+    });
 
     // ========== GALLERY DATA ==========
   const galleryData = {
