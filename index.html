@@ -1586,6 +1586,7 @@
 </footer>
 
 <script>
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // ========== NAV TOGGLE ==========
@@ -1872,6 +1873,7 @@
 
     if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
 
+    // 🔥 SAME-DAY SURCHARGE CHECK
     const sameDayInfo = checkSameDayOrder();
     let surchargeText = '';
     if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
@@ -1989,21 +1991,30 @@
     summaryText.textContent = newSummary;
   }
 
+  // 🔥 SAME-DAY ORDER LOGIC - COMPLETE
+  const SAME_DAY_NOT_ALLOWED = [
+  'breads', 
+  'cinnamon-rolls', 
+  'cheesecake', 
+  'jeera-biscuits', 
+  'bagels', 
+  'ladi-pav'
+];
+
   function checkSameDayOrder() {
     const category = document.getElementById('category').value;
     const date = document.getElementById('pickupDate').value;
     
     if (!category || !date) {
-      return { isSameDay: false, surcharge: 0, allowed: true };
+      return { isSameDay: false, surcharge: 0, allowed: true, categoryName: '' };
     }
     
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    
     const isSameDay = date === todayStr;
     
     if (!isSameDay) {
-      return { isSameDay: false, surcharge: 0, allowed: true };
+      return { isSameDay: false, surcharge: 0, allowed: true, categoryName: '' };
     }
     
     const catLabels = {
@@ -2020,18 +2031,23 @@
     
     const categoryName = catLabels[category] || category;
     
-    const sameDayNotAllowed = ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'cake-cups', 'bagels', 'ladi-pav'];
-    
-    if (sameDayNotAllowed.includes(category)) {
+    // Check if this category allows same-day orders
+    if (SAME_DAY_NOT_ALLOWED.includes(category)) {
       return { isSameDay: true, surcharge: 0, allowed: false, categoryName: categoryName };
     }
     
+    // Calculate surcharge for allowed categories
     let surcharge = 0;
     if (category === 'cake') surcharge = 20;
     if (category === 'cupcakes') surcharge = 10;
+    if (category === 'cake-cups') surcharge = 5;
     
     return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
   }
+
+  // ============================================================
+  // 🔥 VALIDATE DATE INPUT
+  // ============================================================
 
   function validateDateInput() {
     const dateInput = document.getElementById('pickupDate');
@@ -2042,6 +2058,7 @@
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     
+    // Only block dates in the past (before today)
     if (date < todayStr) {
       alert('❌ Please select today or a future date for pickup.');
       dateInput.value = todayStr;
@@ -2054,6 +2071,7 @@
     }
   }
 
+  // 🔥 VALIDATE DATE & TIME FOR ORDER
   function validateDateTime() {
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
@@ -2228,7 +2246,7 @@
   }
 
   // ============================================================
-  // 🔥 FIXED MESSAGING FUNCTIONS
+  // MESSAGING FUNCTIONS
   // ============================================================
 
   function getInquiryMessage() {
@@ -2282,68 +2300,23 @@ Thank you for considering DM.Me.Bakery! ✨`;
     return finalText;
   }
 
-  // 🔥 DETECT IF WHATSAPP IS AVAILABLE
-  function isWhatsAppAvailable() {
-    const ua = navigator.userAgent.toLowerCase();
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(ua);
-    
-    // If not mobile, use WhatsApp Web (desktop)
-    if (!isMobile) return true;
-    
-    // On mobile, check if WhatsApp is installed
-    // Android: check if the app is installed via intent detection
-    // iOS: check via user agent or scheme detection
-    if (/android/i.test(ua)) {
-      // On Android, we can try to detect if WhatsApp is installed
-      // If the user agent contains "w", it might be WhatsApp WebView
-      if (ua.indexOf('whatsapp') !== -1) return true;
-      
-      // For Android, we'll attempt to use the intent URL and fallback to SMS if it fails
-      // We'll return true to try WhatsApp first
-      return true;
-    }
-    
-    if (/iphone|ipad|ipod/i.test(ua)) {
-      // On iOS, check if WhatsApp is installed
-      // If the user agent contains "w", it might be WhatsApp WebView
-      if (ua.indexOf('whatsapp') !== -1) return true;
-      
-      // On iOS, we'll try to use the whatsapp:// scheme and fallback to SMS
-      return true;
-    }
-    
-    return true; // Default to trying WhatsApp
-  }
-
-  // 🔥 DETECT IF MOBILE DEVICE
   function isMobileDevice() {
     return /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
   }
 
-  // 🔥 MAIN FUNCTION TO SEND MESSAGE
   function sendMessage(text, trackInSheets = false) {
     const encodedText = encodeURIComponent(text);
     const isMobile = isMobileDevice();
-    const hasWhatsApp = isWhatsAppAvailable();
-    
-    console.log('📱 isMobile:', isMobile);
-    console.log('💬 hasWhatsApp:', hasWhatsApp);
     
     if (isMobile) {
-      if (hasWhatsApp) {
-        // 🔥 Try WhatsApp first on mobile
-        openWhatsApp(encodedText);
-      } else {
-        // 🔥 Fallback to SMS
-        openSMS(encodedText);
-      }
+      // Try WhatsApp first
+      openWhatsApp(encodedText);
     } else {
-      // 🔥 Desktop: always use WhatsApp Web
+      // Desktop: use WhatsApp Web
       openWhatsApp(encodedText);
     }
   }
 
-  // 🔥 OPEN WHATSAPP
   function openWhatsApp(encodedText) {
     const urls = [
       `https://wa.me/${PHONE_NUMBER}?text=${encodedText}`,
@@ -2353,7 +2326,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
     
     let opened = false;
     
-    // Try each URL
     for (const url of urls) {
       try {
         const win = window.open(url, '_blank');
@@ -2373,7 +2345,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
     }
   }
 
-  // 🔥 OPEN SMS
   function openSMS(encodedText) {
     const text = decodeURIComponent(encodedText);
     const smsUrl = `sms:${PHONE_NUMBER}?body=${encodedText}`;
@@ -2385,7 +2356,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
       }
     } catch(e) {
       console.log('SMS attempt failed:', e);
-      // Ultimate fallback: copy to clipboard
       navigator.clipboard.writeText(text).then(() => {
         alert('📋 Message copied to clipboard!\n\nPlease text it to: +1' + PHONE_NUMBER);
       }).catch(() => {
@@ -2395,12 +2365,12 @@ Thank you for considering DM.Me.Bakery! ✨`;
   }
 
   // ============================================================
-  // ORDER & INQUIRY FUNCTIONS
+  // 🔥 ORDER & INQUIRY FUNCTIONS WITH SAME-DAY LOGIC
   // ============================================================
 
   function sendToWhatsApp() {
     console.log('sendToWhatsApp called');
-    
+  
     if (!validateDateTime()) {
       console.log('Validation failed');
       return;
@@ -2428,7 +2398,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
     const text = getOrderMessage();
     console.log('Sending message:', text);
     
-    // 🔥 Send to Google Sheets FIRST
     collectOrderData().then(orderData => {
       console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
       sendToSheets(orderData);
@@ -2436,14 +2405,13 @@ Thank you for considering DM.Me.Bakery! ✨`;
       console.log('Error collecting order data:', err);
     });
     
-    // 🔥 Then send the message
     sendMessage(text, false);
   }
 
   function sendInquiry() {
     const text = getInquiryMessage();
     
-    // 🔥 Send inquiry to Google Sheets too
+    // Send inquiry to Google Sheets too (if there's data)
     collectOrderData().then(orderData => {
       if (orderData && orderData.product) {
         sendToSheets(orderData);
@@ -2475,6 +2443,21 @@ Thank you for considering DM.Me.Bakery! ✨`;
     document.getElementById('pickupDate').value = '';
     document.getElementById('pickupTime').value = '';
   }
+
+  // ============================================================
+  // SET MIN DATE FOR PICKUP
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('pickupDate');
+    if (dateInput) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      dateInput.min = `${year}-${month}-${day}`;
+    }
+  });
+
 
     // ============================================================
     // SET MIN DATE FOR PICKUP
