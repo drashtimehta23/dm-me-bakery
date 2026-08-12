@@ -2108,6 +2108,7 @@
   }
 
   function addToOrder() {
+    // Get values from DOM
     const category = document.getElementById('category').value;
     const size = document.getElementById('size').value;
     const flavor = document.getElementById('flavor').value;
@@ -2178,7 +2179,7 @@
       flavor: flavor,
       vegan: vegan,
       addons: addons,
-      price: isTiered ? 0 : price, // Set price to 0 for tiered
+      price: isTiered ? 'NA' : price, // Set price to 'NA' for tiered
       description: description,
       isTiered: isTiered
     });
@@ -2212,9 +2213,6 @@
     document.getElementById('orderItemsList').style.display = 'block';
   }
 
-
-
-  // ========== RENDER ORDER ITEMS ==========
   function renderOrderItems() {
     const container = document.getElementById('orderItemsList');
     const clearBtn = document.getElementById('clearOrderBtn');
@@ -2242,27 +2240,41 @@
     
     // Items list with better styling
     orderItems.forEach((item, index) => {
+      const priceDisplay = item.price === 'NA' ? 'NA' : `$${item.price}`;
       html += `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; background: var(--white); border-radius: 8px; margin-bottom: 6px; border: 1px solid rgba(61,43,33,0.06); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
           <span style="font-size: 0.9rem; flex: 1; color: var(--brown-700);">${item.description}</span>
-          <span style="font-weight: 600; color: var(--blush-deep); font-size: 0.9rem; margin-right: 12px;">$${item.price}</span>
+          <span style="font-weight: 600; color: var(--blush-deep); font-size: 0.9rem; margin-right: 12px;">${priceDisplay}</span>
           <button onclick="removeFromOrder(${index})" style="background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1.1rem; padding: 0 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✕</button>
         </div>
       `;
     });
     
-    // Total
-    const total = orderItems.reduce((sum, item) => sum + item.price, 0);
+    // Total - only sum numeric prices
+    const total = orderItems.reduce((sum, item) => {
+      if (item.price === 'NA') return sum;
+      return sum + item.price;
+    }, 0);
+    
+    const hasNA = orderItems.some(item => item.price === 'NA');
+    const totalDisplay = hasNA ? 'NA (Message for quote)' : `$${total}`;
+    
     html += `
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; background: var(--cream-soft); border-radius: 8px; margin-top: 8px; border: 2px solid var(--blush);">
         <strong style="color: var(--brown-900); font-size: 1.05rem;">Total:</strong>
-        <strong style="color: var(--blush-deep); font-size: 1.2rem;">$${total}</strong>
+        <strong style="color: var(--blush-deep); font-size: 1.2rem;">${totalDisplay}</strong>
       </div>
     `;
     
     html += '</div>';
     
     // Add Order button at the bottom
+    const totalForButton = orderItems.reduce((sum, item) => {
+      if (item.price === 'NA') return sum;
+      return sum + item.price;
+    }, 0);
+    const buttonText = hasNA ? `Order Now — Message for quote` : `Order Now — $${totalForButton}`;
+    
     html += `
       <div id="orderActions" style="margin-top: 16px; text-align: center; padding-top: 12px; border-top: 1px solid rgba(61,43,33,0.08);">
         <button type="button" class="btn btn-primary" onclick="sendToWhatsApp()" style="padding: 14px 40px; font-size: 1.05rem; width: 100%; justify-content: center; background: var(--blush); color: var(--white); border: none; border-radius: 999px; font-family: var(--sans); font-weight: 600; cursor: pointer; transition: transform .18s ease, background .2s ease;">
@@ -2270,7 +2282,7 @@
             <path d="M22 2 11 13"/>
             <path d="M22 2 15 22l-4-9-9-4 20-7Z"/>
           </svg>
-          Order Now — $${total}
+          ${buttonText}
         </button>
         <p style="font-size: 0.75rem; color: var(--brown-500); margin-top: 6px;">Review your items above, then click Order to send us a message</p>
       </div>
@@ -2278,7 +2290,7 @@
     
     container.innerHTML = html;
   }
-
+   
 
 
   // ========== REMOVE FROM ORDER ==========
@@ -2303,14 +2315,24 @@
 
   // ========== UPDATE TOTAL PRICE ==========
   function updateTotalPrice() {
-    const total = orderItems.reduce((sum, item) => sum + item.price, 0);
+    const total = orderItems.reduce((sum, item) => {
+      if (item.price === 'NA') return sum;
+      return sum + item.price;
+    }, 0);
     const priceDisplay = document.getElementById('priceOutput');
     const priceLabel = document.getElementById('priceLabel');
     
     if (orderItems.length > 0) {
-      priceDisplay.textContent = '$' + total;
-      priceLabel.textContent = 'Order Total';
-      document.getElementById('pricingNote').textContent = `*${orderItems.length} item(s) in your order. Final price depends on design and custom details. We'll confirm your final price after you message us!`;
+      const hasNA = orderItems.some(item => item.price === 'NA');
+      if (hasNA) {
+        priceDisplay.textContent = 'NA';
+        priceLabel.textContent = 'Order Total';
+        document.getElementById('pricingNote').textContent = `*${orderItems.length} item(s) in your order. Some items require custom pricing (marked as NA). We'll confirm your final price after you message us!`;
+      } else {
+        priceDisplay.textContent = '$' + total;
+        priceLabel.textContent = 'Order Total';
+        document.getElementById('pricingNote').textContent = `*${orderItems.length} item(s) in your order. Final price depends on design and custom details. We'll confirm your final price after you message us!`;
+      }
     }
   }
 
