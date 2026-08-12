@@ -2939,10 +2939,18 @@ Thank you for considering DM.Me.Bakery!`;
     // Add order items with clean formatting
     finalText += `Order Items:\n`;
     let totalPrice = 0;
+    let hasNA = false;
+    
     orderItems.forEach((item, index) => {
-      finalText += `${index + 1}. ${item.description}`;
-      finalText += `=$${item.price}\n`;
-      totalPrice += item.price;
+      // Skip items with NA price
+      if (item.price === 'NA') {
+        finalText += `${index + 1}. ${item.description} = Quote Needed (Tiered Cake)\n`;
+        hasNA = true;
+      } else {
+        const itemPrice = parseInt(item.price) || 0;
+        totalPrice += itemPrice;
+        finalText += `${index + 1}. ${item.description} = $${itemPrice}\n`;
+      }
     });
     
     // Check for same-day conflicts
@@ -2962,7 +2970,7 @@ Thank you for considering DM.Me.Bakery!`;
     } else if (isToday) {
       // Calculate same-day fee
       const allowedItems = orderItems.filter(item => 
-        !['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
+        !['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category) && item.price !== 'NA'
       );
       let surcharge = 0;
       allowedItems.forEach(item => {
@@ -2979,7 +2987,12 @@ Thank you for considering DM.Me.Bakery!`;
     }
     
     // Total
-    finalText += `\nOrder Total: $${totalPrice}\n\n`;
+    if (hasNA) {
+      finalText += `\nOrder Total: Quote Needed (Tiered cakes require custom pricing)\n\n`;
+    } else {
+      finalText += `\nOrder Total: $${totalPrice}\n\n`;
+    }
+    
     finalText += `Pickup location: Eastvale, CA\n\n`;
     finalText += `Thank you for choosing DM.Me.Bakery!`;
     
