@@ -2579,15 +2579,13 @@ Thank you for considering DM.Me.Bakery! ✨`;
     const isToday = date === todayStr;
     
     // Add order items with clean formatting
-    finalText += `📋 Order Items:\n`;
-    finalText += `─────────────────\n`;
+    finalText += `Order Items:\n`;
     let totalPrice = 0;
     orderItems.forEach((item, index) => {
-      finalText += `${index + 1}. ${item.description}\n`;
-      finalText += `   💰 $${item.price}\n`;
+      finalText += `${index + 1}. ${item.description}`;
+      finalText += `=$${item.price}\n`;
       totalPrice += item.price;
     });
-    finalText += `─────────────────\n`;
     
     // Check for same-day conflicts
     const hasSameDayConflict = orderItems.some(item => 
@@ -2623,7 +2621,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
     }
     
     // Total
-    finalText += `💰 Order Total: $${totalPrice}\n\n`;
+    finalText += `Order Total: $${totalPrice}\n\n`;
     finalText += `📍 Pickup location: Eastvale, CA\n\n`;
     finalText += `Thank you for considering DM.Me.Bakery! ✨`;
     
