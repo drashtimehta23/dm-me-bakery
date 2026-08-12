@@ -1776,86 +1776,7 @@
 
   // ========== ADD TO ORDER FUNCTION ==========
   function addToOrder() {
-    const category = document.getElementById('category').value;
-    const size = document.getElementById('size').value;
-    const flavor = document.getElementById('flavor').value;
-    const typeSelect = document.getElementById('typeSelect');
-    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
-    
-    if (!category || !size) {
-      alert('Please select a category and size first.');
-      return;
-    }
-    
-    // Check if this is a tiered cake
-    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
-    if (isTiered) {
-      alert('For tiered cakes, please message us directly for a custom quote.');
-      return;
-    }
-    
-    // Get addons
-    let addons = [];
-    if (category === 'cake') {
-      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
-        addons.push(cb.value);
-      });
-    }
-    if (category === 'cupcakes') {
-      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
-        addons.push(cb.value);
-      });
-    }
-    
-    // Get price for this item
-    let price = 0;
-    if (category === 'cake') {
-      if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 70;
-      else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 90;
-      else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 110;
-      else if (size.includes('1/4 sheet')) price = 130;
-      else if (size.includes('1/2 sheet')) price = 175;
-    }
-    else if (category === 'breads') {
-      if (size.includes('Loaf')) price = 18;
-      else if (size.includes('Baguette')) price = 8;
-      else if (size.includes('Sandwich Bread')) price = 10;
-    }
-    else if (category === 'cake-cups') {
-      const count = parseInt(size);
-      price = count * 4;
-    }
-    else if (category === 'cupcakes') {
-      if (size.includes('12 Count')) price = 45;
-      else if (size.includes('24 Count')) price = 65;
-    }
-    else if (category === 'cheesecake') {
-      if (size.includes('6 inch')) price = 70;
-      else if (size.includes('8 inch')) price = 90;
-    }
-    else {
-      price = priceData[category]?.basePrice || 0;
-    }
-    
-    // Add addon prices
-    if (category === 'cake') {
-      addons.forEach(addon => {
-        if (addon === 'filling') price += 10;
-        if (addon === 'fondant') price += 20;
-        if (addon === 'faux-flowers') price += 10;
-        if (addon === 'fresh-flowers') price += 20;
-      });
-    }
-    if (category === 'cupcakes') {
-      addons.forEach(addon => {
-        if (addon === 'filling') price += 5;
-        if (addon === 'cake-topper') price += 5;
-      });
-    }
-    
-    if (vegan) price += 15;
-    
-    // Build item description
+   on
     let description = `${catLabels[category] || category} - ${size}`;
     if (flavor && (category === 'cake' || category === 'cupcakes')) {
       description += ` (${flavor})`;
@@ -1903,8 +1824,6 @@
     document.getElementById('pricingNote').style.display = 'block';
     document.getElementById('summaryBox').style.display = 'none';
     
-    // Show success message
-    alert(`✅ Added to order: ${description}\nPrice: $${price}`);
   }
 
   // ========== RENDER ORDER ITEMS ==========
@@ -2567,7 +2486,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
       dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
     }
     
-    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 Here is my order summary:\n\n`;
+    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 Here is your order summary:\n\n`;
     
     if (dateTimeStr) {
       finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
@@ -2621,9 +2540,9 @@ Thank you for considering DM.Me.Bakery! ✨`;
     }
     
     // Total
-    finalText += `Order Total: $${totalPrice}\n\n`;
+    finalText += `\nOrder Total: $${totalPrice}\n\n`;
     finalText += `📍 Pickup location: Eastvale, CA\n\n`;
-    finalText += `Thank you for considering DM.Me.Bakery! ✨`;
+    finalText += `Thank you for choosing DM.Me.Bakery! ✨`;
     
     return finalText;
   }
