@@ -1308,7 +1308,7 @@
         <!-- Hero section -->
         <div class="hero-actions">
           <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
-          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Start Your Order</a>
+          <a class="btn btn-outline" onclick="scrollToOrderForm()" style="cursor:pointer;" id="startOrderBtn">Start Your Order</a>
         </div>
       </div>
 
@@ -3961,27 +3961,28 @@ Thank you for considering DM.Me.Bakery! ✨`;
     window.testimonialControls = { nextSlide, prevSlide, updateSlide };
   })();
 
-    // Function to scroll to the pricing helper section
   function scrollToOrderForm() {
-    const orderSection = document.getElementById('pricing-helper');
-    if (orderSection) {
-      orderSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      // Fallback: try scrolling to the #order section
-      const fallbackSection = document.getElementById('order');
-      if (fallbackSection) {
-        fallbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+  const section = document.getElementById('pricing-helper');
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  // Attach the function to the existing "Start Your Order" button
-  document.addEventListener('DOMContentLoaded', function() {
-    const startOrderBtn = document.querySelector('.hero-actions .btn-outline');
-    if (startOrderBtn) {
-      // Replace the existing onclick with our scroll function
-      startOrderBtn.setAttribute('onclick', 'scrollToOrderForm()');
-    }
-  });
+  return false; // Prevent any default behavior
+}
+
+// Force the click to work on all devices
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('startOrderBtn');
+  if (btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const section = document.getElementById('pricing-helper');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+});
+
 </script>
 </body>
 </html>
