@@ -1775,6 +1775,19 @@
     const fixedPriceCategories = ['breads', 'cinnamon-rolls', 'jeera-biscuits', 'bagels', 'ladi-pav'];
     const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
 
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+
+    // Handle Tiered Cakes
     if (isTiered) {
       flavorContainer.style.display = 'none';
       typeContainer.style.display = 'none';
@@ -1786,10 +1799,35 @@
       priceDisplay.textContent = 'Message us';
       priceLabel.textContent = 'Pricing';
       pricingNote.style.display = 'none';
-      summaryBox.style.display = 'none';
+      
+      // Build summary for tiered cake
+      let tierSummary = '';
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        tierSummary += `Date: ${formattedDate}\n`;
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        tierSummary += `Time: ${hours}:${minutes} ${ampm}\n`;
+      }
+      tierSummary += `Category: ${catLabels[category] || category}\nSize: ${size}\n`;
+      tierSummary += `Type: ${vegan ? 'Vegan' : 'Eggless'}\n`;
+      tierSummary += `Price: Please message us for a custom quote.`;
+      
+      document.getElementById('summaryText').textContent = tierSummary;
+      summaryBox.style.display = 'block';
       return;
     }
 
+    // Handle regular categories
     if (category === 'cake' || category === 'cupcakes') {
       flavorContainer.style.display = 'block';
     }
@@ -1852,17 +1890,18 @@
       finalPrice = priceData[category]?.basePrice || 0;
     }
 
+    // Add cake add-ons
     if (category === 'cake') {
       const checkboxes = document.querySelectorAll('#cake-addons input:checked');
       checkboxes.forEach(cb => {
         if (cb.value === 'filling') finalPrice += 10;
-        if (cb.value === 'custom-theme') finalPrice += 20;
         if (cb.value === 'fondant') finalPrice += 20;
         if (cb.value === 'faux-flowers') finalPrice += 10;
         if (cb.value === 'fresh-flowers') finalPrice += 20;
       });
     }
 
+    // Add cupcake add-ons
     if (category === 'cupcakes') {
       const checkboxes = document.querySelectorAll('#cupcake-addons input:checked');
       checkboxes.forEach(cb => {
@@ -1871,33 +1910,44 @@
       });
     }
 
+    // Add vegan surcharge
     if (typeContainer.style.display !== 'none' && vegan) finalPrice += 15;
 
-    // 🔥 SAME-DAY SURCHARGE CHECK
+    // Check same-day order
     const sameDayInfo = checkSameDayOrder();
-    let surchargeText = '';
+    let basePrice = finalPrice;
+    let displayPrice = finalPrice;
+    
     if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
-      finalPrice += sameDayInfo.surcharge;
-      surchargeText = ` (+$${sameDayInfo.surcharge} same-day fee)`;
+      // Store base price before adding surcharge
+      basePrice = finalPrice - sameDayInfo.surcharge;
+      displayPrice = finalPrice; // This already has surcharge added
     }
 
-    const catLabels = {
-      'cake': 'Cake',
-      'cupcakes': 'Cupcakes',
-      'breads': 'Bread',
-      'cinnamon-rolls': 'Cinnamon Rolls',
-      'cheesecake': 'Cheesecake',
-      'jeera-biscuits': 'Jeera Biscuits',
-      'cake-cups': 'Cake Cups',
-      'bagels': 'Bagels',
-      'ladi-pav': 'Ladi Pav'
-    };
+    // Update price display
+    const isFixedPrice = fixedPriceCategories.includes(category);
+    
+    if (isFixedPrice) {
+      priceLabel.textContent = 'Price';
+      pricingNote.style.display = 'none';
+      priceDisplay.textContent = '$' + finalPrice;
+    } else if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
+      priceLabel.textContent = 'Price (includes same-day fee)';
+      pricingNote.style.display = 'block';
+      pricingNote.textContent = `*Base price $${basePrice} + $${sameDayInfo.surcharge} same-day fee = $${finalPrice}. Final price depends on design and custom details. We'll confirm your final price after you message us the details!`;
+      priceDisplay.textContent = '$' + finalPrice;
+    } else {
+      priceLabel.textContent = 'Estimated starting price';
+      pricingNote.style.display = 'block';
+      pricingNote.textContent = '*Final price depends on design and custom details. We\'ll confirm your final price after you message us the details!';
+      priceDisplay.textContent = '$' + finalPrice;
+    }
 
+    // Build summary
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
 
     let summary = '';
-
     if (date) {
       const dateObj = new Date(date + 'T00:00:00');
       const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
@@ -1908,10 +1958,8 @@
       let hours = parseInt(timeParts[0]);
       const minutes = timeParts[1];
       const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      const formattedTime = `${hours}:${minutes} ${ampm}`;
-      summary += `Time: ${formattedTime}\n`;
+      hours = hours % 12 || 12;
+      summary += `Time: ${hours}:${minutes} ${ampm}\n`;
     }
     summary += `Category: ${catLabels[category] || category}\nSize: ${size}`;
     
@@ -1938,58 +1986,54 @@
       summary += `\nAdd-ons: ${addonList.join(', ')}`;
     }
 
-    const isFixedPrice = fixedPriceCategories.includes(category);
-
-    if (isFixedPrice) {
-      priceLabel.textContent = 'Price';
-      pricingNote.style.display = 'none';
+    // Price summary with clear same-day fee wording
+    if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
+      summary += `\nPrice: $${basePrice} base + $${sameDayInfo.surcharge} same-day fee = $${finalPrice}`;
+    } else if (isFixedPrice) {
       summary += `\nPrice: $${finalPrice}`;
     } else {
-      priceLabel.textContent = 'Estimated starting price';
-      pricingNote.style.display = 'block';
-      summary += `\nEstimated Price: $${finalPrice}${surchargeText}`;
+      summary += `\nEstimated Price: $${finalPrice}`;
     }
 
     document.getElementById('summaryText').textContent = summary;
     summaryBox.style.display = 'block';
-    priceDisplay.textContent = '$' + finalPrice;
   }
 
-  function updateSummary() {
-    const summaryText = document.getElementById('summaryText');
-    const date = document.getElementById('pickupDate').value;
-    const time = document.getElementById('pickupTime').value;
-    let currentText = summaryText.textContent || '';
-    
-    const lines = currentText.split('\n');
-    const filteredLines = lines.filter(line => 
-      !line.startsWith('Date:') && !line.startsWith('Time:')
-    );
-    
-    let newSummary = filteredLines.join('\n');
-    let dateTimePrefix = '';
-    
-    if (date) {
-      const dateObj = new Date(date + 'T00:00:00');
-      const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-      dateTimePrefix += `Date: ${formattedDate}\n`;
+    function updateSummary() {
+      const summaryText = document.getElementById('summaryText');
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      let currentText = summaryText.textContent || '';
+      
+      const lines = currentText.split('\n');
+      const filteredLines = lines.filter(line => 
+        !line.startsWith('Date:') && !line.startsWith('Time:')
+      );
+      
+      let newSummary = filteredLines.join('\n');
+      let dateTimePrefix = '';
+      
+      if (date) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+        dateTimePrefix += `Date: ${formattedDate}\n`;
+      }
+      if (time) {
+        const timeParts = time.split(':');
+        let hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const formattedTime = `${hours}:${minutes} ${ampm}`;
+        dateTimePrefix += `Time: ${formattedTime}\n`;
+      }
+      
+      if (dateTimePrefix) {
+        newSummary = dateTimePrefix + newSummary;
+      }
+      
+      summaryText.textContent = newSummary;
     }
-    if (time) {
-      const timeParts = time.split(':');
-      let hours = parseInt(timeParts[0]);
-      const minutes = timeParts[1];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      const formattedTime = `${hours}:${minutes} ${ampm}`;
-      dateTimePrefix += `Time: ${formattedTime}\n`;
-    }
-    
-    if (dateTimePrefix) {
-      newSummary = dateTimePrefix + newSummary;
-    }
-    
-    summaryText.textContent = newSummary;
-  }
 
   // 🔥 SAME-DAY ORDER LOGIC - COMPLETE
   const SAME_DAY_NOT_ALLOWED = [
@@ -2273,6 +2317,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
     
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
+    const category = document.getElementById('category').value;
     
     let dateTimeStr = '';
     if (date) {
@@ -2294,7 +2339,34 @@ Thank you for considering DM.Me.Bakery! ✨`;
       finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
     }
     
-    finalText += text;
+    // Check if this is a tiered cake
+    const isTiered = category === 'cake' && (text.includes('2 Tier') || text.includes('3 Tier'));
+    
+    if (isTiered) {
+      // For tiered cakes, the text already includes the custom quote message
+      finalText += text;
+    } else {
+      // For regular orders, check if it's same-day
+      const sameDayInfo = checkSameDayOrder();
+      let priceText = text;
+      
+      // If same-day, make sure the price breakdown is clear in the message
+      if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
+        // The price should already be formatted correctly from updatePrice()
+        // But we'll make sure it's clear
+        const priceMatch = text.match(/Price: \$(\d+)/);
+        if (priceMatch) {
+          const totalPrice = parseInt(priceMatch[1]);
+          const basePrice = totalPrice - sameDayInfo.surcharge;
+          priceText = text.replace(
+            /Price: \$(\d+)/, 
+            `Price: $${basePrice} base + $${sameDayInfo.surcharge} same-day fee = $${totalPrice}`
+          );
+        }
+      }
+      finalText += priceText;
+    }
+    
     finalText += `\n\nThank you for considering DM.Me.Bakery! ✨`;
     
     return finalText;
@@ -2370,7 +2442,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
 
   function sendToWhatsApp() {
     console.log('sendToWhatsApp called');
-  
+
     if (!validateDateTime()) {
       console.log('Validation failed');
       return;
@@ -2387,7 +2459,16 @@ Thank you for considering DM.Me.Bakery! ✨`;
         document.getElementById('pickupDate').focus();
         return;
       } else {
-        const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\nA same-day fee of $${sameDayInfo.surcharge} will be added to your order.\n\nDo you want to proceed?`;
+        // Show base price and surcharge separately in the confirmation
+        const category = document.getElementById('category').value;
+        let basePrice = 0;
+        if (category === 'cake') basePrice = 70; // Default base
+        // Get actual base price from the current selection
+        const priceDisplay = document.getElementById('priceOutput');
+        const currentPrice = parseInt(priceDisplay.textContent.replace('$', '')) || 0;
+        const basePriceDisplay = currentPrice - sameDayInfo.surcharge;
+        
+        const confirmMsg = `⚠️ Same-day order detected!\n\nYou've selected today's date for "${sameDayInfo.categoryName}".\n\nBase price: $${basePriceDisplay}\nSame-day fee: $${sameDayInfo.surcharge}\nTotal: $${currentPrice}\n\nDo you want to proceed?`;
         if (!confirm(confirmMsg)) {
           return;
         }
