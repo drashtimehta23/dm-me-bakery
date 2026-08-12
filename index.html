@@ -1188,8 +1188,7 @@
       <p class="about-copy" style="margin-top:18px;">
         Dm.Me.Bakery started the way most good things do — in a home kitchen, with a mixing bowl, a shared sweet tooth, and a challenge: could eggless and vegan baking still be <strong>rich, soft, and craveable?</strong> 
         A few orders later, our home kitchen became the go-to bakery for birthdays, baby showers, and everyday celebrations.
-      </p>
-      <blockquote>No eggs. No dairy.<br>No compromise on flavor.</blockquote>
+      </p><blockquote style="font-family: var(--script); font-size: 2.1rem; color: var(--blush-deep); line-height: 1.3; margin-top:38px; padding:0 54px;">No eggs. No dairy.<br>No compromise on flavor.</blockquote>
     </div>
   </section>
 
@@ -1335,7 +1334,7 @@
     <div class="section-head reveal">
       <span class="eyebrow">The Sweet Spot</span>
       <h2>Find Your Starting Price</h2>
-      <p>Not sure about the cost? Use our quick estimator below. It's a guide — final pricing will be confirmed after we chat about your custom details.</p>
+      <p>Use our quick estimator below. This is a guide — final pricing will be confirmed after we chat about your custom details.</p>
     </div>
 
     <div class="pricing-box reveal">
@@ -1776,7 +1775,57 @@
 
   // ========== ADD TO ORDER FUNCTION ==========
   function addToOrder() {
-   on
+    // Get values from DOM
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    
+    // Get addons
+    let addons = [];
+    document.querySelectorAll('#cake-addons input:checked, #cupcake-addons input:checked').forEach(cb => {
+      addons.push(cb.value);
+    });
+    
+    // Get price
+    const priceText = document.getElementById('priceOutput').textContent;
+    const price = parseInt(priceText.replace('$', '')) || 0;
+    
+    // Check if tiered
+    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
+    
+    // Validate selections
+    if (!category) {
+      alert('Please select a category first.');
+      return;
+    }
+    if (!size) {
+      alert('Please select a size.');
+      return;
+    }
+    if ((category === 'cake' || category === 'cupcakes') && !flavor) {
+      alert('Please select a flavor.');
+      return;
+    }
+    if (isTiered) {
+      alert('Please message us directly for tiered cake pricing. The "Add to Order" button is disabled for tiered cakes.');
+      return;
+    }
+    
+    // Build description
+    const catLabels = {
+      'cake': 'Cake',
+      'cupcakes': 'Cupcakes',
+      'breads': 'Bread',
+      'cinnamon-rolls': 'Cinnamon Rolls',
+      'cheesecake': 'Cheesecake',
+      'jeera-biscuits': 'Jeera Biscuits',
+      'cake-cups': 'Cake Cups',
+      'bagels': 'Bagels',
+      'ladi-pav': 'Ladi Pav'
+    };
+    
     let description = `${catLabels[category] || category} - ${size}`;
     if (flavor && (category === 'cake' || category === 'cupcakes')) {
       description += ` (${flavor})`;
@@ -1824,8 +1873,6 @@
     document.getElementById('pricingNote').style.display = 'block';
     document.getElementById('summaryBox').style.display = 'none';
     
-    // Show success message
-    alert(`✅ Added to order: ${description}\nPrice: $${price}`);
   }
 
   // ========== RENDER ORDER ITEMS ==========
@@ -2537,7 +2584,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
         const surchargeItems = allowedItems.map(i => catLabels[i.category] || i.category).join(', ');
         finalText += `\n⚠️ SAME-DAY ORDER:\n`;
         finalText += `📌 Same-day fee: $${surcharge} (applied to: ${surchargeItems})\n`;
-        finalText += `💰 Total with same-day fee: $${totalPrice + surcharge}\n\n`;
+        finalText += `Total with same-day fee: $${totalPrice + surcharge}\n\n`;
       }
     }
     
