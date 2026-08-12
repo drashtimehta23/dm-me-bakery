@@ -1463,7 +1463,6 @@
         <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:20px;">
           <button type="button" class="btn btn-outline btn-sm" onclick="addToOrder()" id="addItemBtn" style="display:none;">Add to Order</button>
           <button type="button" class="btn btn-outline btn-sm" onclick="resetPricing()">Start Over</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="sendToWhatsApp()">Order</button>
         </div>
 
         
@@ -1908,7 +1907,6 @@
     alert(`✅ Added to order: ${description}\nPrice: $${price}`);
   }
 
-
   // ========== RENDER ORDER ITEMS ==========
   function renderOrderItems() {
     const container = document.getElementById('orderItemsList');
@@ -1960,7 +1958,7 @@
     // Add Order button at the bottom
     html += `
       <div id="orderActions" style="margin-top: 16px; text-align: center; padding-top: 12px; border-top: 1px solid rgba(61,43,33,0.08);">
-        <button type="button" class="btn btn-primary" onclick="sendToWhatsApp()" style="padding: 14px 40px; font-size: 1.05rem; width: 100%; justify-content: center;">
+        <button type="button" class="btn btn-primary" onclick="sendToWhatsApp()" style="padding: 14px 40px; font-size: 1.05rem; width: 100%; justify-content: center; background: var(--blush); color: var(--white); border: none; border-radius: 999px; font-family: var(--sans); font-weight: 600; cursor: pointer; transition: transform .18s ease, background .2s ease;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
             <path d="M22 2 11 13"/>
             <path d="M22 2 15 22l-4-9-9-4 20-7Z"/>
@@ -1973,6 +1971,8 @@
     
     container.innerHTML = html;
   }
+
+
 
   // ========== REMOVE FROM ORDER ==========
   function removeFromOrder(index) {
@@ -2382,12 +2382,8 @@
   function validateDateTime() {
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
-    const category = document.getElementById('category').value;
     
-    if (!category) {
-      alert('Please select a category first.');
-      return false;
-    }
+    // Don't check category here - we already check orderItems in sendToWhatsApp
     
     if (!date) {
       alert('Please select a pickup date.');
@@ -2578,13 +2574,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
     }
     
     // Check for same-day items
-    const sameDayCategories = orderItems.map(item => item.category);
-    const hasSameDayConflict = sameDayCategories.some(cat => 
-      cat === 'breads' || cat === 'cinnamon-rolls' || cat === 'cheesecake' || 
-      cat === 'jeera-biscuits' || cat === 'bagels' || cat === 'ladi-pav'
-    );
-    
-    // Check if today's date is selected
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     const isToday = date === todayStr;
@@ -2600,7 +2589,11 @@ Thank you for considering DM.Me.Bakery! ✨`;
     });
     finalText += `─────────────────\n`;
     
-    // Add same-day warning if applicable
+    // Check for same-day conflicts
+    const hasSameDayConflict = orderItems.some(item => 
+      ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
+    );
+    
     if (isToday && hasSameDayConflict) {
       const unavailableItems = orderItems
         .filter(item => ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category))
@@ -2708,20 +2701,37 @@ Thank you for considering DM.Me.Bakery! ✨`;
   function sendToWhatsApp() {
     console.log('sendToWhatsApp called');
 
+    // Check if there are items in the order
     if (orderItems.length === 0) {
-      alert('Please add at least one item to your order first.');
+      alert('❌ Please add at least one item to your order first.\n\nSelect a category, size, and click "Add to Order" to build your order.');
       return;
     }
 
-    if (!validateDateTime()) {
-      console.log('Validation failed');
+    // Validate date and time
+    const date = document.getElementById('pickupDate').value;
+    const time = document.getElementById('pickupTime').value;
+    
+    if (!date) {
+      alert('Please select a pickup date.');
+      document.getElementById('pickupDate').focus();
+      return;
+    }
+    
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    if (date < todayStr) {
+      alert('❌ Please select today or a future date for pickup.');
+      document.getElementById('pickupDate').focus();
+      return;
+    }
+    
+    if (!time) {
+      alert('Please select a pickup time.');
+      document.getElementById('pickupTime').focus();
       return;
     }
     
     console.log('Validation passed');
-    
-    const sameDayInfo = checkSameDayOrder();
-    console.log('Same day info:', sameDayInfo);
     
     // Check for same-day conflicts
     const sameDayCategories = orderItems.map(item => item.category);
@@ -2730,9 +2740,6 @@ Thank you for considering DM.Me.Bakery! ✨`;
       cat === 'jeera-biscuits' || cat === 'bagels' || cat === 'ladi-pav'
     );
     
-    const date = document.getElementById('pickupDate').value;
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
     const isToday = date === todayStr;
     
     if (isToday && hasSameDayConflict) {
@@ -2768,6 +2775,7 @@ Thank you for considering DM.Me.Bakery! ✨`;
       }
     }
     
+    // Get the message and send it
     const text = getOrderMessage();
     console.log('Sending message:', text);
     
