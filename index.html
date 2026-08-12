@@ -1751,7 +1751,7 @@
           <div class="testimonial-item" style="flex:0 0 100%; padding:48px 40px 44px; box-sizing:border-box; background:var(--white); border-radius:24px;">
             <div style="display:flex; gap:6px; margin-bottom:16px; color:#D89A72; font-size:1.3rem;">★ ★ ★ ★ ★</div>
             <p style="font-size:1.2rem; line-height:1.6; color:var(--brown-900); font-family:var(--serif); font-weight:400; margin:0 0 20px 0; font-style:italic;">
-              “Thank you so much! The cake was AMAZING!!! nobody could believe it was eggless, it was so moist! It was the showstopper of our party for sure ....and for the chocoholic husband of mine....he didn't want me to share to much of the leftovers with anybody...he wanted it all for himself. And my daughter hid the cake pops from her brother....she didn't want ti share THAT with anybody!!!”
+              “Thank you so much! The cake was AMAZING!!! nobody could believe it was eggless, it was so moist! It was the showstopper of our party for sure and for the chocoholic husband of mine he didn't want me to share to much of the leftovers with anybody he wanted it all for himself. And my daughter hid the cake pops from her brother she didn't want to share THAT with anybody!!!”
             </p>
             <div style="display:flex; align-items:center; gap:14px;">
               <div style="width:52px; height:52px; border-radius:50%; background:var(--cream-soft); display:flex; align-items:center; justify-content:center; font-size:1.6rem; color:var(--brown-500);">💕</div>
@@ -2108,7 +2108,6 @@
   }
 
 
-  // ========== ADD TO ORDER FUNCTION (FIXED) ==========
   function addToOrder() {
     // Get values from DOM
     const category = document.getElementById('category').value;
@@ -2139,10 +2138,13 @@
       alert('Please select a size.');
       return;
     }
-    if ((category === 'cake' || category === 'cupcakes') && !flavor) {
+    
+    // ONLY check flavor if NOT tiered AND category is cake or cupcakes
+    if (!isTiered && (category === 'cake' || category === 'cupcakes') && !flavor) {
       alert('Please select a flavor.');
       return;
     }
+    
     if (isTiered) {
       alert('Please message us directly for tiered cake pricing. The "Add to Order" button is disabled for tiered cakes.');
       return;
@@ -2211,6 +2213,10 @@
     // Show the order items list
     document.getElementById('orderItemsList').style.display = 'block';
   }
+
+
+
+
   // ========== RENDER ORDER ITEMS ==========
   function renderOrderItems() {
     const container = document.getElementById('orderItemsList');
