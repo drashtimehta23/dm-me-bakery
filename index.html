@@ -1273,7 +1273,7 @@
         <!-- Hero section -->
         <div class="hero-actions">
           <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
-          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Message</a>
+          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Start Your Order</a>
         </div>
       </div>
 
@@ -1439,8 +1439,8 @@
   <div class="wrap">
     <div class="section-head reveal">
       <span class="eyebrow">The Sweet Spot</span>
-      <h2>Find Your Starting Price</h2>
-      <p>Use our quick price estimator below. This is a guide — final pricing will be confirmed after we chat about your custom details.</p>
+      <h2>Planning something sweet?/h2>
+      <p>Build your order Choose your cake → Pick your flavor → Make it yours!</p>
     </div>
 
     <div class="pricing-box reveal">
@@ -1894,7 +1894,8 @@
     }
   }
 
-  // ========== ADD TO ORDER FUNCTION ==========
+
+  // ========== ADD TO ORDER FUNCTION (FIXED) ==========
   function addToOrder() {
     // Get values from DOM
     const category = document.getElementById('category').value;
@@ -1909,9 +1910,9 @@
       addons.push(cb.value);
     });
     
-    // Get price
+    // Get price - use the displayed price which includes same-day fee
     const priceText = document.getElementById('priceOutput').textContent;
-    const price = parseInt(priceText.replace('$', '')) || 0;
+    let price = parseInt(priceText.replace('$', '')) || 0;
     
     // Check if tiered
     const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
@@ -1994,8 +1995,9 @@
     document.getElementById('pricingNote').style.display = 'block';
     document.getElementById('summaryBox').style.display = 'none';
     
+    // Show the order items list
+    document.getElementById('orderItemsList').style.display = 'block';
   }
-
   // ========== RENDER ORDER ITEMS ==========
   function renderOrderItems() {
     const container = document.getElementById('orderItemsList');
@@ -2096,6 +2098,7 @@
     }
   }
 
+ 
   function updatePrice() {
     const category = document.getElementById('category').value;
     const size = document.getElementById('size').value;
@@ -2267,13 +2270,12 @@
 
     // Check same-day order
     const sameDayInfo = checkSameDayOrder();
-    let basePrice = finalPrice;
     let displayPrice = finalPrice;
     
+    // Apply same-day surcharge if applicable
     if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
-      // Store base price before adding surcharge
-      basePrice = finalPrice - sameDayInfo.surcharge;
-      displayPrice = finalPrice; // This already has surcharge added
+      // Add the surcharge to the final price
+      displayPrice = finalPrice + sameDayInfo.surcharge;
     }
 
     // Update price display
@@ -2282,17 +2284,17 @@
     if (isFixedPrice) {
       priceLabel.textContent = 'Price';
       pricingNote.style.display = 'none';
-      priceDisplay.textContent = '$' + finalPrice;
+      priceDisplay.textContent = '$' + displayPrice;
     } else if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
       priceLabel.textContent = 'Price (includes same-day fee)';
       pricingNote.style.display = 'block';
-      pricingNote.textContent = `*Base price $${basePrice} + $${sameDayInfo.surcharge} same-day fee = $${finalPrice}. Final price depends on design and custom details. We'll confirm your final price after you message us the details!`;
-      priceDisplay.textContent = '$' + finalPrice;
+      pricingNote.textContent = `*Base price $${finalPrice} + $${sameDayInfo.surcharge} same-day fee = $${displayPrice}. Final price depends on design and custom details. We'll confirm your final price after you message us the details!`;
+      priceDisplay.textContent = '$' + displayPrice;
     } else {
       priceLabel.textContent = 'Estimated starting price';
       pricingNote.style.display = 'block';
       pricingNote.textContent = '*Final price depends on design and custom details. We\'ll confirm your final price after you message us the details!';
-      priceDisplay.textContent = '$' + finalPrice;
+      priceDisplay.textContent = '$' + displayPrice;
     }
 
     // Build summary
@@ -2340,11 +2342,11 @@
 
     // Price summary with clear same-day fee wording
     if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
-      summary += `\nPrice: $${basePrice} base + $${sameDayInfo.surcharge} same-day fee = $${finalPrice}`;
+      summary += `\nPrice: $${finalPrice} base + $${sameDayInfo.surcharge} same-day fee = $${displayPrice}`;
     } else if (isFixedPrice) {
-      summary += `\nPrice: $${finalPrice}`;
+      summary += `\nPrice: $${displayPrice}`;
     } else {
-      summary += `\nEstimated Price: $${finalPrice}`;
+      summary += `\nEstimated Price: $${displayPrice}`;
     }
 
     document.getElementById('summaryText').textContent = summary;
@@ -2436,7 +2438,7 @@
     let surcharge = 0;
     if (category === 'cake') surcharge = 20;
     if (category === 'cupcakes') surcharge = 10;
-    if (category === 'cake-cups') surcharge = 5;
+    if (category === 'cake-cups') surcharge = 10;
     
     return { isSameDay: true, surcharge: surcharge, allowed: true, categoryName: categoryName };
   }
