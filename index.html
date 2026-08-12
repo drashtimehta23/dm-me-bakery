@@ -1459,10 +1459,22 @@
           <div id="summaryText" style="margin-top:4px; white-space:pre-line; font-size:0.92rem;"></div>
         </div>
 
-        <!-- Reset Button -->
+        <!-- Buttons -->
         <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:20px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="addToOrder()" id="addItemBtn" style="display:none;">Add to Order</button>
           <button type="button" class="btn btn-outline btn-sm" onclick="resetPricing()">Start Over</button>
           <button type="button" class="btn btn-primary btn-sm" onclick="sendToWhatsApp()">Order</button>
+        </div>
+
+        <!-- Order Items Display -->
+        <div id="orderItemsContainer" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(61,43,33,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: var(--brown-900); font-family: var(--serif); font-size: 1.1rem;">📋 Your Order Items</strong>
+            <button type="button" class="btn btn-sm btn-outline" onclick="clearOrder()" style="padding: 4px 12px; font-size: 0.75rem;">Clear All</button>
+          </div>
+          <div id="orderItemsList" style="margin-top: 4px;">
+            <p style="color: var(--brown-500); font-style: italic; text-align: center; padding: 12px;">No items added yet.</p>
+          </div>
         </div>
 
       </form>
@@ -1607,6 +1619,28 @@
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+
+  // ========== MULTI-CATEGORY ORDER STATE ==========
+  let orderItems = [];
+  let currentCategory = '';
+  let currentSize = '';
+  let currentFlavor = '';
+  let currentType = '';
+  let currentAddons = [];
+
+  // Category display names
+  const catLabels = {
+    'cake': 'Cake',
+    'cupcakes': 'Cupcakes',
+    'breads': 'Bread',
+    'cinnamon-rolls': 'Cinnamon Rolls',
+    'cheesecake': 'Cheesecake',
+    'jeera-biscuits': 'Jeera Biscuits',
+    'cake-cups': 'Cake Cups',
+    'bagels': 'Bagels',
+    'ladi-pav': 'Ladi Pav'
+  };
+
   // ========== PRICING HELPER LOGIC ==========
   const priceData = {
     'cake': {
@@ -1669,14 +1703,16 @@
     const cupcakeAddons = document.getElementById('cupcake-addons');
     const summaryBox = document.getElementById('summaryBox');
     const selectedCategoryText = document.getElementById('selected-category-text');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const orderItemsList = document.getElementById('orderItemsList');
 
+    // Hide all dynamic sections
     flavorContainer.style.display = 'none';
     breadFlavorDisplay.style.display = 'none';
     bagelFlavorDisplay.style.display = 'none';
     tierMessage.style.display = 'none';
     cakeAddons.style.display = 'none';
     cupcakeAddons.style.display = 'none';
-    summaryBox.style.display = 'none';
 
     const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
     const typeContainer = document.getElementById('type-container');
@@ -1685,18 +1721,6 @@
     } else {
       typeContainer.style.display = 'block';
     }
-
-    const catLabels = {
-      'cake': 'Cake',
-      'cupcakes': 'Cupcakes',
-      'breads': 'Bread',
-      'cinnamon-rolls': 'Cinnamon Rolls',
-      'cheesecake': 'Cheesecake',
-      'jeera-biscuits': 'Jeera Biscuits',
-      'cake-cups': 'Cake Cups',
-      'bagels': 'Bagels',
-      'ladi-pav': 'Ladi Pav'
-    };
 
     if (category) {
       document.getElementById('step-category').classList.remove('active');
@@ -1736,12 +1760,218 @@
         cupcakeAddons.style.display = 'block';
         document.querySelectorAll('#cupcake-addons input').forEach(cb => cb.checked = false);
       }
+
+      // Show Add to Order button
+      if (addItemBtn) addItemBtn.style.display = 'inline-flex';
+      if (orderItemsList) orderItemsList.style.display = 'block';
+      
+      updatePrice();
     } else {
       document.getElementById('step-category').classList.add('active');
       stepDetails.classList.remove('active');
       selectedCategoryText.textContent = '';
+      if (addItemBtn) addItemBtn.style.display = 'none';
     }
-    updatePrice();
+  }
+
+  // ========== ADD TO ORDER FUNCTION ==========
+  function addToOrder() {
+    const category = document.getElementById('category').value;
+    const size = document.getElementById('size').value;
+    const flavor = document.getElementById('flavor').value;
+    const typeSelect = document.getElementById('typeSelect');
+    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    
+    if (!category || !size) {
+      alert('Please select a category and size first.');
+      return;
+    }
+    
+    // Check if this is a tiered cake
+    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
+    if (isTiered) {
+      alert('For tiered cakes, please message us directly for a custom quote.');
+      return;
+    }
+    
+    // Get addons
+    let addons = [];
+    if (category === 'cake') {
+      document.querySelectorAll('#cake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
+    }
+    if (category === 'cupcakes') {
+      document.querySelectorAll('#cupcake-addons input:checked').forEach(cb => {
+        addons.push(cb.value);
+      });
+    }
+    
+    // Get price for this item
+    let price = 0;
+    if (category === 'cake') {
+      if (size.includes('6 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 70;
+      else if (size.includes('8 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 90;
+      else if (size.includes('10 inch') && !size.includes('2 Tier') && !size.includes('3 Tier')) price = 110;
+      else if (size.includes('1/4 sheet')) price = 130;
+      else if (size.includes('1/2 sheet')) price = 175;
+    }
+    else if (category === 'breads') {
+      if (size.includes('Loaf')) price = 18;
+      else if (size.includes('Baguette')) price = 8;
+      else if (size.includes('Sandwich Bread')) price = 10;
+    }
+    else if (category === 'cake-cups') {
+      const count = parseInt(size);
+      price = count * 4;
+    }
+    else if (category === 'cupcakes') {
+      if (size.includes('12 Count')) price = 45;
+      else if (size.includes('24 Count')) price = 65;
+    }
+    else if (category === 'cheesecake') {
+      if (size.includes('6 inch')) price = 70;
+      else if (size.includes('8 inch')) price = 90;
+    }
+    else {
+      price = priceData[category]?.basePrice || 0;
+    }
+    
+    // Add addon prices
+    if (category === 'cake') {
+      addons.forEach(addon => {
+        if (addon === 'filling') price += 10;
+        if (addon === 'fondant') price += 20;
+        if (addon === 'faux-flowers') price += 10;
+        if (addon === 'fresh-flowers') price += 20;
+      });
+    }
+    if (category === 'cupcakes') {
+      addons.forEach(addon => {
+        if (addon === 'filling') price += 5;
+        if (addon === 'cake-topper') price += 5;
+      });
+    }
+    
+    if (vegan) price += 15;
+    
+    // Build item description
+    let description = `${catLabels[category] || category} - ${size}`;
+    if (flavor && (category === 'cake' || category === 'cupcakes')) {
+      description += ` (${flavor})`;
+    }
+    if (vegan) description += ' [VEGAN]';
+    if (addons.length) {
+      const addonNames = addons.map(a => a.replace(/-/g, ' '));
+      description += ` + ${addonNames.join(', ')}`;
+    }
+    
+    // Add to order items
+    orderItems.push({
+      category: category,
+      size: size,
+      flavor: flavor,
+      vegan: vegan,
+      addons: addons,
+      price: price,
+      description: description,
+      isTiered: isTiered
+    });
+    
+    // Update the order items display
+    renderOrderItems();
+    
+    // Update total price
+    updateTotalPrice();
+    
+    // Reset the current selection
+    document.getElementById('category').value = '';
+    document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
+    document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
+    document.getElementById('flavor-container').style.display = 'none';
+    document.getElementById('bread-flavor-display').style.display = 'none';
+    document.getElementById('bagel-flavor-display').style.display = 'none';
+    document.getElementById('tier-message').style.display = 'none';
+    document.getElementById('cake-addons').style.display = 'none';
+    document.getElementById('cupcake-addons').style.display = 'none';
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('step-category').classList.add('active');
+    document.getElementById('step-details').classList.remove('active');
+    document.getElementById('selected-category-text').textContent = '';
+    document.getElementById('priceOutput').textContent = '$0';
+    document.getElementById('priceLabel').textContent = 'Estimated starting price';
+    document.getElementById('pricingNote').style.display = 'block';
+    document.getElementById('summaryBox').style.display = 'none';
+    
+    // Show success message
+    alert(`✅ Added to order: ${description}\nPrice: $${price}`);
+  }
+
+  // ========== RENDER ORDER ITEMS ==========
+  function renderOrderItems() {
+    const container = document.getElementById('orderItemsList');
+    if (!container) return;
+    
+    if (orderItems.length === 0) {
+      container.innerHTML = '<p style="color: var(--brown-500); font-style: italic; text-align: center; padding: 12px;">No items added yet.</p>';
+      return;
+    }
+    
+    let html = '<div style="margin-top: 12px; max-height: 200px; overflow-y: auto;">';
+    orderItems.forEach((item, index) => {
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--cream-soft); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--blush);">
+          <span style="font-size: 0.85rem; flex: 1;">${item.description}</span>
+          <span style="font-weight: 600; color: var(--blush-deep); font-size: 0.85rem; margin-right: 10px;">$${item.price}</span>
+          <button onclick="removeFromOrder(${index})" style="background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1rem; padding: 0 4px;">✕</button>
+        </div>
+      `;
+    });
+    html += '</div>';
+    
+    // Add total
+    const total = orderItems.reduce((sum, item) => sum + item.price, 0);
+    html += `
+      <div style="display: flex; justify-content: space-between; padding: 10px 12px; background: var(--cream); border-radius: 6px; margin-top: 6px; border-top: 2px solid var(--blush);">
+        <strong style="color: var(--brown-900);">Total:</strong>
+        <strong style="color: var(--blush-deep);">$${total}</strong>
+      </div>
+    `;
+    
+    container.innerHTML = html;
+  }
+
+  // ========== REMOVE FROM ORDER ==========
+  function removeFromOrder(index) {
+    orderItems.splice(index, 1);
+    renderOrderItems();
+    updateTotalPrice();
+  }
+
+  // ========== CLEAR ORDER ==========
+  function clearOrder() {
+    if (orderItems.length === 0) return;
+    if (confirm('Are you sure you want to clear all items from your order?')) {
+      orderItems = [];
+      renderOrderItems();
+      updateTotalPrice();
+      document.getElementById('priceOutput').textContent = '$0';
+      document.getElementById('priceLabel').textContent = 'Estimated starting price';
+      document.getElementById('pricingNote').textContent = '*Final price depends on design and custom details. We\'ll confirm your final price after you message us the details!';
+    }
+  }
+
+  // ========== UPDATE TOTAL PRICE ==========
+  function updateTotalPrice() {
+    const total = orderItems.reduce((sum, item) => sum + item.price, 0);
+    const priceDisplay = document.getElementById('priceOutput');
+    const priceLabel = document.getElementById('priceLabel');
+    
+    if (orderItems.length > 0) {
+      priceDisplay.textContent = '$' + total;
+      priceLabel.textContent = 'Order Total';
+      document.getElementById('pricingNote').textContent = `*${orderItems.length} item(s) in your order. Final price depends on design and custom details. We'll confirm your final price after you message us!`;
+    }
   }
 
   function updatePrice() {
@@ -2312,12 +2542,8 @@ Thank you for considering DM.Me.Bakery! ✨`;
   }
 
   function getOrderMessage() {
-    const summaryText = document.getElementById('summaryText');
-    const text = summaryText ? summaryText.textContent : 'I would like to place an order!';
-    
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
-    const category = document.getElementById('category').value;
     
     let dateTimeStr = '';
     if (date) {
@@ -2333,41 +2559,69 @@ Thank you for considering DM.Me.Bakery! ✨`;
       dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
     }
     
-    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order. Here is your order summary:\n\n`;
+    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 Here is my order summary:\n\n`;
     
-    if (dateTimeStr && !text.includes('Date:')) {
+    if (dateTimeStr) {
       finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
     }
     
-    // Check if this is a tiered cake
-    const isTiered = category === 'cake' && (text.includes('2 Tier') || text.includes('3 Tier'));
+    // Check for same-day items
+    const sameDayCategories = orderItems.map(item => item.category);
+    const hasSameDayConflict = sameDayCategories.some(cat => 
+      cat === 'breads' || cat === 'cinnamon-rolls' || cat === 'cheesecake' || 
+      cat === 'jeera-biscuits' || cat === 'bagels' || cat === 'ladi-pav'
+    );
     
-    if (isTiered) {
-      // For tiered cakes, the text already includes the custom quote message
-      finalText += text;
-    } else {
-      // For regular orders, check if it's same-day
-      const sameDayInfo = checkSameDayOrder();
-      let priceText = text;
+    // Check if today's date is selected
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const isToday = date === todayStr;
+    
+    // Add order items
+    let totalPrice = 0;
+    finalText += '📋 Order Items:\n';
+    orderItems.forEach((item, index) => {
+      finalText += `${index + 1}. ${item.description}\n`;
+      finalText += `   Price: $${item.price}\n`;
+      totalPrice += item.price;
+    });
+    
+    // Add same-day warning if applicable
+    if (isToday && hasSameDayConflict) {
+      const unavailableItems = orderItems
+        .filter(item => ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category))
+        .map(item => catLabels[item.category] || item.category);
       
-      // If same-day, make sure the price breakdown is clear in the message
-      if (sameDayInfo.isSameDay && sameDayInfo.allowed) {
-        // The price should already be formatted correctly from updatePrice()
-        // But we'll make sure it's clear
-        const priceMatch = text.match(/Price: \$(\d+)/);
-        if (priceMatch) {
-          const totalPrice = parseInt(priceMatch[1]);
-          const basePrice = totalPrice - sameDayInfo.surcharge;
-          priceText = text.replace(
-            /Price: \$(\d+)/, 
-            `Price: $${basePrice} base + $${sameDayInfo.surcharge} same-day fee = $${totalPrice}`
-          );
-        }
-      }
-      finalText += priceText;
+      finalText += `\n⚠️ NOTE: Same-day order detected!\n`;
+      finalText += `The following items are NOT available for same-day orders:\n`;
+      finalText += `• ${unavailableItems.join('\n• ')}\n`;
+      finalText += `Please select a future date for these items, or choose different items for today.\n\n`;
+    } else if (isToday) {
+      // Same-day order but all items are allowed
+      finalText += `\n⚠️ Same-day order detected. A same-day fee will apply.\n`;
     }
     
-    finalText += `\n\nThank you for considering DM.Me.Bakery! ✨`;
+    // Add total
+    finalText += `\n💰 Total: $${totalPrice}\n\n`;
+    
+    // Add same-day fee breakdown if applicable
+    if (isToday) {
+      const allowedItems = orderItems.filter(item => 
+        !['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
+      );
+      let surcharge = 0;
+      allowedItems.forEach(item => {
+        if (item.category === 'cake') surcharge += 20;
+        else if (item.category === 'cupcakes') surcharge += 10;
+        else if (item.category === 'cake-cups') surcharge += 5;
+      });
+      if (surcharge > 0) {
+        finalText += `📌 Same-day fee: $${surcharge} (applied to: ${allowedItems.map(i => catLabels[i.category] || i.category).join(', ')})\n`;
+        finalText += `Total with same-day fee: $${totalPrice + surcharge}\n\n`;
+      }
+    }
+    
+    finalText += `📍 Pickup location: Eastvale, CA\n\nThank you for considering DM.Me.Bakery! ✨`;
     
     return finalText;
   }
@@ -2519,10 +2773,15 @@ Thank you for considering DM.Me.Bakery! ✨`;
     document.getElementById('priceOutput').textContent = '$0';
     document.getElementById('priceLabel').textContent = 'Estimated starting price';
     document.getElementById('pricingNote').style.display = 'block';
+    document.getElementById('pricingNote').textContent = '*Final price depends on design and custom details. We\'ll confirm your final price after you message us the details!';
     document.getElementById('summaryBox').style.display = 'none';
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
     document.getElementById('pickupDate').value = '';
     document.getElementById('pickupTime').value = '';
+    document.getElementById('addItemBtn').style.display = 'none';
+    // Clear order items
+    orderItems = [];
+    renderOrderItems();
   }
 
   // ============================================================
