@@ -2824,17 +2824,17 @@
   // ============================================================
 
   function getInquiryMessage() {
-    return `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 I'd love to help with your order.
+    return `Hi! Thank you for reaching out to DM.Me.Bakery! I'd love to help with your order.
 
 To get started, please send me the following details:
-📅 Date needed:
-⏰ Pickup time:
-🎂 Product:
-👥 Size:
-🍰 Flavor:
-🥛 Eggless or Plant-Based:
-🎨 Design/theme:
-📍 Pickup location: Eastvale, CA
+Date needed:
+Pickup time:
+Product:
+Size:
+Flavor:
+Eggless or Plant-Based:
+Design/theme:
+Pickup location: Eastvale, CA
 
 📸 If you have a specific design in mind, please send a reference photo as well!
 Once I have these details, I'll check availability and send you a quote. 💗
@@ -2859,10 +2859,10 @@ Thank you for considering DM.Me.Bakery! ✨`;
       dateTimeStr += dateTimeStr ? ` @ ${hours}:${minutes} ${ampm}` : `${hours}:${minutes} ${ampm}`;
     }
     
-    let finalText = `Hi! 💕 Thank you for reaching out to DM.Me.Bakery! 🧁 Here is your order summary:\n\n`;
+    let finalText = `Hi! Thank you for reaching out to DM.Me.Bakery! Here is your order summary:\n\n`;
     
     if (dateTimeStr) {
-      finalText += `📅 Pickup: ${dateTimeStr}\n\n`;
+      finalText += `Pickup: ${dateTimeStr}\n\n`;
     }
     
     // Check for same-day items
@@ -2906,16 +2906,16 @@ Thank you for considering DM.Me.Bakery! ✨`;
       });
       if (surcharge > 0) {
         const surchargeItems = allowedItems.map(i => catLabels[i.category] || i.category).join(', ');
-        finalText += `\n⚠️ SAME-DAY ORDER:\n`;
-        finalText += `📌 Same-day fee: $${surcharge} (applied to: ${surchargeItems})\n`;
+        finalText += `\nSAME-DAY ORDER:\n`;
+        finalText += `Same-day fee: $${surcharge} (applied to: ${surchargeItems})\n`;
         finalText += `Total with same-day fee: $${totalPrice + surcharge}\n\n`;
       }
     }
     
     // Total
     finalText += `\nOrder Total: $${totalPrice}\n\n`;
-    finalText += `📍 Pickup location: Eastvale, CA\n\n`;
-    finalText += `Thank you for choosing DM.Me.Bakery! ✨`;
+    finalText += `Pickup location: Eastvale, CA\n\n`;
+    finalText += `Thank you for choosing DM.Me.Bakery!`;
     
     return finalText;
   }
