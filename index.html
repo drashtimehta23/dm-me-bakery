@@ -3961,6 +3961,27 @@ Thank you for considering DM.Me.Bakery! ✨`;
     window.testimonialControls = { nextSlide, prevSlide, updateSlide };
   })();
 
+    // Function to scroll to the pricing helper section
+  function scrollToOrderForm() {
+    const orderSection = document.getElementById('pricing-helper');
+    if (orderSection) {
+      orderSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Fallback: try scrolling to the #order section
+      const fallbackSection = document.getElementById('order');
+      if (fallbackSection) {
+        fallbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+  // Attach the function to the existing "Start Your Order" button
+  document.addEventListener('DOMContentLoaded', function() {
+    const startOrderBtn = document.querySelector('.hero-actions .btn-outline');
+    if (startOrderBtn) {
+      // Replace the existing onclick with our scroll function
+      startOrderBtn.setAttribute('onclick', 'scrollToOrderForm()');
+    }
+  });
 </script>
 </body>
 </html>
