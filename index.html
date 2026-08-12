@@ -2107,7 +2107,6 @@
     }
   }
 
-
   function addToOrder() {
     // Get values from DOM
     const category = document.getElementById('category').value;
@@ -2145,11 +2144,6 @@
       return;
     }
     
-    if (isTiered) {
-      alert('Please message us directly for tiered cake pricing. The "Add to Order" button is disabled for tiered cakes.');
-      return;
-    }
-    
     // Build description
     const catLabels = {
       'cake': 'Cake',
@@ -2173,6 +2167,11 @@
       description += ` + ${addonNames.join(', ')}`;
     }
     
+    // If tiered, add a note
+    if (isTiered) {
+      description += ' [TIERED - Message for quote]';
+    }
+    
     // Add to order items
     orderItems.push({
       category: category,
@@ -2180,7 +2179,7 @@
       flavor: flavor,
       vegan: vegan,
       addons: addons,
-      price: price,
+      price: isTiered ? 0 : price, // Set price to 0 for tiered
       description: description,
       isTiered: isTiered
     });
