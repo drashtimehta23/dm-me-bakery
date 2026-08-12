@@ -1306,9 +1306,10 @@
         </div>
 
         <!-- Hero section -->
-       <div class="hero-actions">
+        <div class="hero-actions">
           <a class="btn btn-primary" href="https://instagram.com/dm.me.bakery" target="_blank" rel="noopener">Instagram</a>
-          <a class="btn btn-outline" onclick="document.getElementById('pricing-helper').scrollIntoView({ behavior: 'smooth' });" style="cursor:pointer;">Start Your Order</a>
+          <a class="btn btn-outline" onclick="sendInquiry()" style="cursor:pointer;">Start Your Order</a>
+        </div>
       </div>
 
       <div class="hero-art reveal">
@@ -1906,13 +1907,6 @@
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  // Scroll to order form
-  function scrollToOrder() {
-    const section = document.getElementById('pricing-helper');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
 
   // ========== NAV TOGGLE ==========
   const toggle = document.getElementById('navToggle');
