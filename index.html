@@ -1169,10 +1169,11 @@
     .dropdown-content a {
       padding: 8px 16px;
       font-size: 0.88rem;
+      white-space: normal;
     }
     
     .dropdown.open .dropdown-content {
-      display: block;
+      display: block !important;
     }
   }
 
@@ -2930,14 +2931,18 @@ Thank you for considering DM.Me.Bakery! ✨`;
     // ========== DROPDOWN TOGGLE FOR MOBILE ==========
     document.addEventListener('DOMContentLoaded', function() {
       const dropdowns = document.querySelectorAll('.dropdown');
+      const navToggle = document.getElementById('navToggle');
+      const navLinks = document.getElementById('navLinks');
       
       dropdowns.forEach(dropdown => {
         const dropbtn = dropdown.querySelector('.dropbtn');
         
         // Toggle dropdown on mobile
         dropbtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation(); // Stop event from bubbling up
+          
           if (window.innerWidth <= 860) {
-            e.preventDefault();
             dropdown.classList.toggle('open');
           }
         });
@@ -2947,9 +2952,11 @@ Thank you for considering DM.Me.Bakery! ✨`;
           link.addEventListener('click', function() {
             dropdown.classList.remove('open');
             // Close mobile menu
-            const navLinks = document.getElementById('navLinks');
             if (navLinks) {
               navLinks.classList.remove('open');
+              if (navToggle) {
+                navToggle.setAttribute('aria-expanded', false);
+              }
             }
           });
         });
@@ -2965,7 +2972,15 @@ Thank you for considering DM.Me.Bakery! ✨`;
           });
         }
       });
+      
+      // Fix: Don't close dropdown when clicking the toggle button
+      if (navToggle) {
+        navToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      }
     });
+      
 
     // ========== GALLERY DATA ==========
   const galleryData = {
