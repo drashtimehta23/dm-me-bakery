@@ -2344,18 +2344,16 @@
       });
     });
     
-    // Attach event listener for Order Now button (works on mobile)
     const orderBtn = document.getElementById('orderNowBtn');
     if (orderBtn) {
       orderBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        sendToWhatsApp();
-      });
-      orderBtn.addEventListener('touchend', function(e) {
-        e.preventDefault();
+        e.stopPropagation();
+        console.log('Order Now button clicked');
         sendToWhatsApp();
       });
     }
+    
   }
 
   // ========== PRELOAD GALLERY IMAGES ==========
@@ -3218,7 +3216,15 @@ Thank you for considering DM.Me.Bakery!`;
   }
 
   // ========== MESSAGING CHOICE POPUP ==========
+  function sendToWhatsApp() {
+      console.log('sendToWhatsApp called - showing choice popup');
+      showMessagingChoice();
+  }
+
+  // ========== ADD THIS COMPLETE MESSAGING CHOICE POPUP ==========
   function showMessagingChoice() {
+      console.log('showMessagingChoice called');
+      
       // Check if there are items in the order
       if (orderItems.length === 0) {
           alert('❌ Please add at least one item to your order first.\n\nSelect a category, size, and click "Add to Order" to build your order.');
@@ -3270,8 +3276,9 @@ Thank you for considering DM.Me.Bakery!`;
       
       // Get the order message
       const text = getOrderMessage();
+      const encodedText = encodeURIComponent(text);
       
-      // Send to Google Sheets first
+      // Send to Google Sheets FIRST
       collectOrderData().then(orderData => {
           if (orderData) {
               orderData.product = orderItems.map(item => item.description).join(' | ');
@@ -3280,21 +3287,16 @@ Thank you for considering DM.Me.Bakery!`;
                   return sum + item.price;
               }, 0);
               orderData.amount = total.toString();
+              console.log('📤 Sending to Google Sheets...');
               sendToSheets(orderData);
           }
-      }).catch(() => {});
+      }).catch(err => {
+          console.log('Error collecting order data:', err);
+      });
       
-      // Show the choice popup
-      showChoicePopup(text);
-  }
-
-  function showChoicePopup(message) {
       // Remove any existing popup
       const existing = document.getElementById('messagingChoicePopup');
       if (existing) existing.remove();
-      
-      const encodedText = encodeURIComponent(message);
-      const isMobile = isMobileDevice();
       
       // Create popup overlay
       const overlay = document.createElement('div');
@@ -3308,7 +3310,7 @@ Thank you for considering DM.Me.Bakery!`;
           background: rgba(0,0,0,0.55);
           backdrop-filter: blur(6px);
           -webkit-backdrop-filter: blur(6px);
-          z-index: 9999;
+          z-index: 99999;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -3361,7 +3363,7 @@ Thank you for considering DM.Me.Bakery!`;
                   gap: 12px;
                   padding: 16px 20px;
                   border-radius: 14px;
-                  border: 2px solid #25D366;
+                  border: none;
                   background: #25D366;
                   color: white;
                   font-size: 1.05rem;
@@ -3386,7 +3388,7 @@ Thank you for considering DM.Me.Bakery!`;
                   gap: 12px;
                   padding: 16px 20px;
                   border-radius: 14px;
-                  border: 2px solid #34B7F1;
+                  border: none;
                   background: #34B7F1;
                   color: white;
                   font-size: 1.05rem;
@@ -3430,42 +3432,46 @@ Thank you for considering DM.Me.Bakery!`;
       
       overlay.appendChild(popup);
       document.body.appendChild(overlay);
+      console.log('✅ Popup added to DOM');
       
-      // Style animations
-      const style = document.createElement('style');
-      style.textContent = `
-          @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-          }
-          @keyframes slideUp {
-              from { opacity: 0; transform: translateY(30px) scale(0.95); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
-          }
-          #choiceWhatsApp:active, #choiceSMS:active, #copyChoice:active {
-              transform: scale(0.96);
-          }
-          #choiceWhatsApp:hover, #choiceSMS:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 6px 24px rgba(0,0,0,0.2);
-          }
-          #copyChoice:hover {
-              background: var(--cream-soft);
-          }
-          @media (max-width: 480px) {
-              #messagingChoicePopup div[style] {
-                  padding: 24px 16px 20px;
+      // Add animations if not already present
+      if (!document.getElementById('popupAnimations')) {
+          const style = document.createElement('style');
+          style.id = 'popupAnimations';
+          style.textContent = `
+              @keyframes fadeIn {
+                  from { opacity: 0; }
+                  to { opacity: 1; }
               }
-              #messagingChoicePopup h3 {
-                  font-size: 1.1rem;
+              @keyframes slideUp {
+                  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+                  to { opacity: 1; transform: translateY(0) scale(1); }
               }
-              #choiceWhatsApp, #choiceSMS {
-                  padding: 14px 16px;
-                  font-size: 0.95rem;
+              #choiceWhatsApp:active, #choiceSMS:active, #copyChoice:active {
+                  transform: scale(0.96);
               }
-          }
-      `;
-      document.head.appendChild(style);
+              #choiceWhatsApp:hover, #choiceSMS:hover {
+                  transform: translateY(-2px);
+                  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+              }
+              #copyChoice:hover {
+                  background: var(--cream-soft);
+              }
+              @media (max-width: 480px) {
+                  #messagingChoicePopup > div {
+                      padding: 24px 16px 20px !important;
+                  }
+                  #messagingChoicePopup h3 {
+                      font-size: 1.1rem !important;
+                  }
+                  #choiceWhatsApp, #choiceSMS {
+                      padding: 14px 16px !important;
+                      font-size: 0.95rem !important;
+                  }
+              }
+          `;
+          document.head.appendChild(style);
+      }
       
       // Close button
       document.getElementById('closeChoicePopup').addEventListener('click', function(e) {
@@ -3482,8 +3488,7 @@ Thank you for considering DM.Me.Bakery!`;
       document.getElementById('choiceWhatsApp').addEventListener('click', function(e) {
           e.preventDefault();
           closeChoicePopup();
-          // Open WhatsApp
-          const isMobile = isMobileDevice();
+          const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
           if (isMobile) {
               window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodedText}`, '_blank');
           } else {
@@ -3495,16 +3500,14 @@ Thank you for considering DM.Me.Bakery!`;
       document.getElementById('choiceSMS').addEventListener('click', function(e) {
           e.preventDefault();
           closeChoicePopup();
-          // Open SMS
-          const isMobile = isMobileDevice();
+          const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent);
           if (isMobile) {
-              window.location.href = `sms:${PHONE_NUMBER}?body=${encodeURIComponent(message)}`;
+              window.location.href = `sms:${PHONE_NUMBER}?body=${encodeURIComponent(text)}`;
           } else {
-              // On desktop, copy to clipboard as fallback
-              navigator.clipboard.writeText(message).then(() => {
+              navigator.clipboard.writeText(text).then(() => {
                   alert('📋 Message copied to clipboard!\n\nPlease text it to: +1' + PHONE_NUMBER);
               }).catch(() => {
-                  alert('📋 Please copy this message and send it to +1' + PHONE_NUMBER + ':\n\n' + message);
+                  alert('📋 Please copy this message and send it to +1' + PHONE_NUMBER + ':\n\n' + text);
               });
           }
       });
@@ -3512,8 +3515,7 @@ Thank you for considering DM.Me.Bakery!`;
       // Copy to clipboard
       document.getElementById('copyChoice').addEventListener('click', function(e) {
           e.preventDefault();
-          navigator.clipboard.writeText(message).then(() => {
-              // Show temporary feedback
+          navigator.clipboard.writeText(text).then(() => {
               const btn = this;
               const originalText = btn.innerHTML;
               btn.innerHTML = '✅ Copied!';
@@ -3525,9 +3527,8 @@ Thank you for considering DM.Me.Bakery!`;
                   btn.style.color = '';
               }, 2000);
           }).catch(() => {
-              // Fallback
               const textarea = document.createElement('textarea');
-              textarea.value = message;
+              textarea.value = text;
               document.body.appendChild(textarea);
               textarea.select();
               document.execCommand('copy');
@@ -3540,6 +3541,7 @@ Thank you for considering DM.Me.Bakery!`;
   function closeChoicePopup() {
       const popup = document.getElementById('messagingChoicePopup');
       if (popup) popup.remove();
+      console.log('Popup closed');
   }
     
     
