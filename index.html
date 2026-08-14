@@ -11,6 +11,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+<!-- Preload critical gallery images (first 6 images for each category) -->
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/1.png">
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/2.png">
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/3.png">
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/4.png">
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/5.png">
+<link rel="preload" as="image" href="https://raw.githubusercontent.com/drashtimehta23/dm-me-bakery/main/pics/6.png">
+
 <style>
   :root{
     --cream: #FBF3EC;
@@ -329,6 +337,19 @@
   .hero-art svg.bracket.right{ right: -6px; top: 20%; }
   @media (max-width: 640px){
     .hero-art svg.bracket{ display:none; }
+  }
+
+  /* Hero slideshow images */
+  .hero-slide {
+    background: var(--cream-soft);
+  }
+
+  .hero-slide.loaded {
+    opacity: 1;
+  }
+
+  .hero-slide.loading {
+    opacity: 0.3;
   }
 
   /* ---------- about ---------- */
@@ -1089,6 +1110,20 @@
     background: var(--brown-900);
     color: var(--cream);
     transform: translateY(-2px);
+  }
+
+  /* Lazy loading placeholder effect */
+  .gallery-item img {
+    background: var(--cream-soft);
+    transition: opacity 0.3s ease;
+  }
+
+  .gallery-item img.loading {
+    opacity: 0.3;
+  }
+
+  .gallery-item img.loaded {
+    opacity: 1;
   }
 
   /* ========== DROPDOWN MENU ========== */
@@ -2320,7 +2355,123 @@
       });
     }
   }
+
+  // ========== PRELOAD GALLERY IMAGES ==========
+let preloadedImages = {};
+let preloadQueue = [];
+
+function preloadImage(url) {
+  return new Promise((resolve) => {
+    if (preloadedImages[url]) { resolve(); return; }
+    const img = new Image();
+    img.onload = () => { preloadedImages[url] = true; resolve(); };
+    img.onerror = () => { preloadedImages[url] = true; resolve(); };
+    img.src = url;
+  });
+}
+
+// Preload images when user hovers over a gallery button
+document.addEventListener('DOMContentLoaded', function() {
+  const cardMap = {
+    'Cakes': 'cake',
+    'Cupcakes': 'cupcakes',
+    'Cake Cups': 'cake-cups',
+    'Bread and Bagels': 'breads',
+    'Cake Hampers': 'cake-hampers'
+  };
+
+  document.querySelectorAll('.card').forEach(card => {
+    const heading = card.querySelector('h3');
+    if (!heading) return;
+    const category = cardMap[heading.textContent.trim()];
+    if (category) {
+      // Preload on hover (desktop) or touch (mobile)
+      card.addEventListener('mouseenter', function() {
+        const data = galleryData[category];
+        if (data && data.images) {
+          data.images.slice(0, 6).forEach(url => preloadImage(url));
+        }
+      });
+    }
+  });
+});
+
+// Update openGallery to show images faster
+  function openGallery(category) {
+    const modal = document.getElementById('galleryModal');
+    const grid = document.getElementById('galleryGrid');
+    const title = document.getElementById('galleryTitle');
+    
+    const data = galleryData[category];
+    if (!data) {
+      grid.innerHTML = `<div class="no-images"><span>📸</span>No images available for this category yet.</div>`;
+      title.textContent = 'Gallery';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
+    title.textContent = data.title;
+    currentGalleryImages = data.images || [];
+    currentGalleryIndex = 0;
+
+      requestAnimationFrame(() => {
+      renderGalleryImages();
+    });
+    
+    
+    // Show images immediately (they're already preloaded)
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
    
+  // ========== IMAGE PRELOADER ==========
+  function preloadImages(imageUrls, onProgress) {
+    let loaded = 0;
+    const total = imageUrls.length;
+    
+    return new Promise((resolve) => {
+      if (total === 0) { resolve(); return; }
+      
+      imageUrls.forEach(url => {
+        const img = new Image();
+        img.onload = function() {
+          loaded++;
+          if (onProgress) onProgress(loaded, total);
+          if (loaded === total) resolve();
+        };
+        img.onerror = function() {
+          loaded++;
+          if (onProgress) onProgress(loaded, total);
+          if (loaded === total) resolve();
+        };
+        img.src = url;
+      });
+    });
+  }
+
+// Preload images when gallery opens
+function openGalleryWithPreload(category) {
+  const data = galleryData[category];
+  if (!data) {
+    openGallery(category);
+    return;
+  }
+  
+  // Show loading state
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--brown-500);">
+    <span style="font-size:2rem;display:block;margin-bottom:12px;">⏳</span>
+    Loading images...
+  </div>`;
+  
+  // Preload all images first
+  const imageUrls = data.images || [];
+  preloadImages(imageUrls).then(() => {
+    // Then open the gallery
+    openGallery(category);
+  });
+}
 
 
   // ========== REMOVE FROM ORDER ==========
