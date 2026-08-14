@@ -3217,104 +3217,332 @@ Thank you for considering DM.Me.Bakery!`;
     }
   }
 
-  // ============================================================
-  // 🔥 ORDER & INQUIRY FUNCTIONS WITH SAME-DAY LOGIC
-  // ============================================================
-  function sendToWhatsApp() {
-    console.log('sendToWhatsApp called');
-
-    // Check if there are items in the order
-    if (orderItems.length === 0) {
-      alert('❌ Please add at least one item to your order first.\n\nSelect a category, size, and click "Add to Order" to build your order.');
-      return;
-    }
-
-    // Validate date and time
-    const date = document.getElementById('pickupDate').value;
-    const time = document.getElementById('pickupTime').value;
-    
-    if (!date) {
-      alert('Please select a pickup date.');
-      document.getElementById('pickupDate').focus();
-      return;
-    }
-    
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    if (date < todayStr) {
-      alert('❌ Please select today or a future date for pickup.');
-      document.getElementById('pickupDate').focus();
-      return;
-    }
-    
-    if (!time) {
-      alert('Please select a pickup time.');
-      document.getElementById('pickupTime').focus();
-      return;
-    }
-    
-    console.log('Validation passed');
-    
-    // Check for same-day conflicts
-    const sameDayCategories = orderItems.map(item => item.category);
-    const hasSameDayConflict = sameDayCategories.some(cat => 
-      cat === 'breads' || cat === 'cinnamon-rolls' || cat === 'cheesecake' || 
-      cat === 'jeera-biscuits' || cat === 'bagels' || cat === 'ladi-pav'
-    );
-    
-    const isToday = date === todayStr;
-    
-    if (isToday && hasSameDayConflict) {
-      const unavailableItems = orderItems
-        .filter(item => ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category))
-        .map(item => catLabels[item.category] || item.category);
-      
-      const confirmMsg = `❌ Same-day order issue!\n\nYou've selected today's date but your order includes items that are NOT available for same-day orders:\n\n• ${unavailableItems.join('\n• ')}\n\nPlease select a future date for these items, or remove them from your order.\n\nDo you want to proceed with your order anyway? (These items will be marked for future pickup)`;
-      
-      if (!confirm(confirmMsg)) {
-        document.getElementById('pickupDate').focus();
-        return;
-      }
-    }
-    
-    // Check for same-day fee for allowed items
-    if (isToday) {
-      const allowedItems = orderItems.filter(item => 
-        !['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
-      );
-      let surcharge = 0;
-      allowedItems.forEach(item => {
-        if (item.category === 'cake') surcharge += 20;
-        else if (item.category === 'cupcakes') surcharge += 10;
-        else if (item.category === 'cake-cups') surcharge += 5;
-      });
-      if (surcharge > 0) {
-        const total = orderItems.reduce((sum, item) => sum + item.price, 0);
-        const confirmMsg = `⚠️ Same-day order detected!\n\nYour order total: $${total}\nSame-day fee: $${surcharge}\nTotal with fee: $${total + surcharge}\n\nDo you want to proceed?`;
-        if (!confirm(confirmMsg)) {
+  // ========== MESSAGING CHOICE POPUP ==========
+  function showMessagingChoice() {
+      // Check if there are items in the order
+      if (orderItems.length === 0) {
+          alert('❌ Please add at least one item to your order first.\n\nSelect a category, size, and click "Add to Order" to build your order.');
           return;
-        }
       }
-    }
-    
-    // Get the message and send it
-    const text = getOrderMessage();
-    console.log('Sending message:', text);
-    
-    // Send to Google Sheets
-    collectOrderData().then(orderData => {
-      // Add order items to the data
-      orderData.product = orderItems.map(item => item.description).join(' | ');
-      orderData.amount = orderItems.reduce((sum, item) => sum + item.price, 0).toString();
-      console.log('📤 Sending to Google Sheets:', JSON.stringify(orderData, null, 2));
-      sendToSheets(orderData);
-    }).catch(err => {
-      console.log('Error collecting order data:', err);
-    });
-    
-    sendMessage(text, false);
+
+      // Validate date and time
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      
+      if (!date) {
+          alert('Please select a pickup date.');
+          document.getElementById('pickupDate').focus();
+          return;
+      }
+      
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      if (date < todayStr) {
+          alert('❌ Please select today or a future date for pickup.');
+          document.getElementById('pickupDate').focus();
+          return;
+      }
+      
+      if (!time) {
+          alert('Please select a pickup time.');
+          document.getElementById('pickupTime').focus();
+          return;
+      }
+      
+      // Check for same-day conflicts
+      const isToday = date === todayStr;
+      const hasSameDayConflict = orderItems.some(item => 
+          ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
+      );
+      
+      if (isToday && hasSameDayConflict) {
+          const unavailableItems = orderItems
+              .filter(item => ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category))
+              .map(item => catLabels[item.category] || item.category);
+          
+          const confirmMsg = `❌ Same-day order issue!\n\nYou've selected today's date but your order includes items that are NOT available for same-day orders:\n\n• ${unavailableItems.join('\n• ')}\n\nPlease select a future date for these items, or remove them from your order.\n\nDo you want to proceed with your order anyway? (These items will be marked for future pickup)`;
+          
+          if (!confirm(confirmMsg)) {
+              document.getElementById('pickupDate').focus();
+              return;
+          }
+      }
+      
+      // Get the order message
+      const text = getOrderMessage();
+      
+      // Send to Google Sheets first
+      collectOrderData().then(orderData => {
+          if (orderData) {
+              orderData.product = orderItems.map(item => item.description).join(' | ');
+              const total = orderItems.reduce((sum, item) => {
+                  if (item.price === 'NA') return sum;
+                  return sum + item.price;
+              }, 0);
+              orderData.amount = total.toString();
+              sendToSheets(orderData);
+          }
+      }).catch(() => {});
+      
+      // Show the choice popup
+      showChoicePopup(text);
   }
-  
+
+  function showChoicePopup(message) {
+      // Remove any existing popup
+      const existing = document.getElementById('messagingChoicePopup');
+      if (existing) existing.remove();
+      
+      const encodedText = encodeURIComponent(message);
+      const isMobile = isMobileDevice();
+      
+      // Create popup overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'messagingChoicePopup';
+      overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.55);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.25s ease;
+          touch-action: manipulation;
+      `;
+      
+      // Popup content
+      const popup = document.createElement('div');
+      popup.style.cssText = `
+          background: white;
+          border-radius: 20px;
+          padding: 32px 28px 28px;
+          max-width: 420px;
+          width: 92%;
+          box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+          text-align: center;
+          animation: slideUp 0.3s ease;
+          position: relative;
+          max-height: 90vh;
+          overflow-y: auto;
+      `;
+      
+      popup.innerHTML = `
+          <button id="closeChoicePopup" style="
+              position: absolute;
+              top: 12px;
+              right: 16px;
+              background: none;
+              border: none;
+              font-size: 1.6rem;
+              cursor: pointer;
+              color: #999;
+              line-height: 1;
+              padding: 4px 8px;
+              touch-action: manipulation;
+          ">×</button>
+          
+          <div style="margin-bottom: 8px;">
+              <span style="font-size: 2.2rem; display: block; margin-bottom: 4px;">📨</span>
+              <h3 style="font-family: var(--serif); color: var(--brown-900); margin: 0 0 4px; font-size: 1.3rem;">Send Your Order</h3>
+              <p style="color: var(--brown-500); font-size: 0.95rem; margin: 0 0 20px;">Choose how you'd like to send your order details</p>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+              <button id="choiceWhatsApp" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 12px;
+                  padding: 16px 20px;
+                  border-radius: 14px;
+                  border: 2px solid #25D366;
+                  background: #25D366;
+                  color: white;
+                  font-size: 1.05rem;
+                  font-weight: 600;
+                  font-family: var(--sans);
+                  cursor: pointer;
+                  transition: transform 0.15s ease, box-shadow 0.2s ease;
+                  touch-action: manipulation;
+                  width: 100%;
+                  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+              ">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  💬 Send via WhatsApp
+              </button>
+              
+              <button id="choiceSMS" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 12px;
+                  padding: 16px 20px;
+                  border-radius: 14px;
+                  border: 2px solid #34B7F1;
+                  background: #34B7F1;
+                  color: white;
+                  font-size: 1.05rem;
+                  font-weight: 600;
+                  font-family: var(--sans);
+                  cursor: pointer;
+                  transition: transform 0.15s ease, box-shadow 0.2s ease;
+                  touch-action: manipulation;
+                  width: 100%;
+                  box-shadow: 0 4px 16px rgba(52, 183, 241, 0.3);
+              ">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                  📱 Send via Text Message
+              </button>
+          </div>
+          
+          <button id="copyChoice" style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+              padding: 12px 20px;
+              border-radius: 12px;
+              border: 1.5px solid var(--brown-500);
+              background: transparent;
+              color: var(--brown-700);
+              font-size: 0.9rem;
+              font-weight: 500;
+              font-family: var(--sans);
+              cursor: pointer;
+              transition: transform 0.15s ease, background 0.2s ease;
+              touch-action: manipulation;
+              width: 100%;
+              margin-top: 10px;
+          ">
+              📋 Copy to Clipboard
+          </button>
+      `;
+      
+      overlay.appendChild(popup);
+      document.body.appendChild(overlay);
+      
+      // Style animations
+      const style = document.createElement('style');
+      style.textContent = `
+          @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+          }
+          @keyframes slideUp {
+              from { opacity: 0; transform: translateY(30px) scale(0.95); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
+          }
+          #choiceWhatsApp:active, #choiceSMS:active, #copyChoice:active {
+              transform: scale(0.96);
+          }
+          #choiceWhatsApp:hover, #choiceSMS:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+          }
+          #copyChoice:hover {
+              background: var(--cream-soft);
+          }
+          @media (max-width: 480px) {
+              #messagingChoicePopup div[style] {
+                  padding: 24px 16px 20px;
+              }
+              #messagingChoicePopup h3 {
+                  font-size: 1.1rem;
+              }
+              #choiceWhatsApp, #choiceSMS {
+                  padding: 14px 16px;
+                  font-size: 0.95rem;
+              }
+          }
+      `;
+      document.head.appendChild(style);
+      
+      // Close button
+      document.getElementById('closeChoicePopup').addEventListener('click', function(e) {
+          e.preventDefault();
+          closeChoicePopup();
+      });
+      
+      // Close on overlay click
+      overlay.addEventListener('click', function(e) {
+          if (e.target === overlay) closeChoicePopup();
+      });
+      
+      // WhatsApp choice
+      document.getElementById('choiceWhatsApp').addEventListener('click', function(e) {
+          e.preventDefault();
+          closeChoicePopup();
+          // Open WhatsApp
+          const isMobile = isMobileDevice();
+          if (isMobile) {
+              window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodedText}`, '_blank');
+          } else {
+              window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodedText}`, '_blank');
+          }
+      });
+      
+      // SMS choice
+      document.getElementById('choiceSMS').addEventListener('click', function(e) {
+          e.preventDefault();
+          closeChoicePopup();
+          // Open SMS
+          const isMobile = isMobileDevice();
+          if (isMobile) {
+              window.location.href = `sms:${PHONE_NUMBER}?body=${encodeURIComponent(message)}`;
+          } else {
+              // On desktop, copy to clipboard as fallback
+              navigator.clipboard.writeText(message).then(() => {
+                  alert('📋 Message copied to clipboard!\n\nPlease text it to: +1' + PHONE_NUMBER);
+              }).catch(() => {
+                  alert('📋 Please copy this message and send it to +1' + PHONE_NUMBER + ':\n\n' + message);
+              });
+          }
+      });
+      
+      // Copy to clipboard
+      document.getElementById('copyChoice').addEventListener('click', function(e) {
+          e.preventDefault();
+          navigator.clipboard.writeText(message).then(() => {
+              // Show temporary feedback
+              const btn = this;
+              const originalText = btn.innerHTML;
+              btn.innerHTML = '✅ Copied!';
+              btn.style.borderColor = '#27ae60';
+              btn.style.color = '#27ae60';
+              setTimeout(() => {
+                  btn.innerHTML = originalText;
+                  btn.style.borderColor = '';
+                  btn.style.color = '';
+              }, 2000);
+          }).catch(() => {
+              // Fallback
+              const textarea = document.createElement('textarea');
+              textarea.value = message;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textarea);
+              alert('📋 Message copied to clipboard!');
+          });
+      });
+  }
+
+  function closeChoicePopup() {
+      const popup = document.getElementById('messagingChoicePopup');
+      if (popup) popup.remove();
+  }
+    
+    
   
   function sendInquiry() {
     const text = getInquiryMessage();
