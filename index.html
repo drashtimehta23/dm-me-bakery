@@ -1222,46 +1222,6 @@
     }
   }
 
-  /* Required field indicator */
-  .required-star {
-    color: #e74c3c;
-    font-weight: 700;
-    margin-left: 2px;
-  }
-
-  /* Required field styling */
-  input[required] {
-    border-color: rgba(61,43,33,0.15);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  input[required]:invalid {
-    border-color: #e74c3c;
-    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.15);
-  }
-
-  input[required]:focus:invalid {
-    border-color: #e74c3c;
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
-  }
-
-  input[required]:valid {
-    border-color: rgba(61,43,33,0.15);
-    box-shadow: none;
-  }
-
-  /* Form validation message */
-  .validation-message {
-    color: #e74c3c;
-    font-size: 0.85rem;
-    margin-top: 4px;
-    display: none;
-  }
-
-  .validation-message.visible {
-    display: block;
-  }
-
     /* ========== ADD THESE STYLES FOR DATE/TIME INPUTS ========== */
   .pricing-box input[type="date"],
   .pricing-box input[type="time"] {
@@ -1731,15 +1691,9 @@
 
         <!-- Date & Time Fields -->
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(61,43,33,0.08);">
-          <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">
-            Pickup Date <span style="color:#e74c3c;font-weight:700;">*</span>
-          </label>
-          <input type="date" id="pickupDate" required style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="validateDateInput(); updatePrice(); updateSummary();" min="">
-          
-          <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">
-            Pickup Time <span style="color:#e74c3c;font-weight:700;">*</span>
-          </label>
-          <input type="time" id="pickupTime" required style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:5px;cursor:pointer;" onchange="updateSummary()">
+          <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Date</label>
+          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="validateDateInput(); updatePrice(); updateSummary();" min="">          <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Time</label>
+          <input type="time" id="pickupTime" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:5px;cursor:pointer;" onchange="updateSummary()">
         </div>
 
 
@@ -2934,54 +2888,33 @@ function openGalleryWithPreload(category) {
     }
   }
 
-
+  // 🔥 VALIDATE DATE & TIME FOR ORDER
   function validateDateTime() {
     const date = document.getElementById('pickupDate').value;
     const time = document.getElementById('pickupTime').value;
-    let isValid = true;
-    let errorMessages = [];
-
-    // Reset validation styles
-    document.getElementById('pickupDate').style.borderColor = '';
-    document.getElementById('pickupTime').style.borderColor = '';
-
+    
+    // Don't check category here - we already check orderItems in sendToWhatsApp
+    
     if (!date) {
-      document.getElementById('pickupDate').style.borderColor = '#e74c3c';
-      document.getElementById('pickupDate').style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.2)';
-      errorMessages.push('Please select a pickup date.');
-      isValid = false;
-    }
-
-    if (!time) {
-      document.getElementById('pickupTime').style.borderColor = '#e74c3c';
-      document.getElementById('pickupTime').style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.2)';
-      errorMessages.push('Please select a pickup time.');
-      isValid = false;
-    }
-
-    if (!isValid) {
-      alert('❌ ' + errorMessages.join('\n'));
-      if (!date) document.getElementById('pickupDate').focus();
-      else if (!time) document.getElementById('pickupTime').focus();
+      alert('Please select a pickup date.');
+      document.getElementById('pickupDate').focus();
       return false;
     }
-
+    
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     if (date < todayStr) {
       alert('❌ Please select today or a future date for pickup.');
-      document.getElementById('pickupDate').style.borderColor = '#e74c3c';
-      document.getElementById('pickupDate').style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.2)';
       document.getElementById('pickupDate').focus();
       return false;
     }
-
-    // Clear validation styles on success
-    document.getElementById('pickupDate').style.borderColor = '';
-    document.getElementById('pickupDate').style.boxShadow = '';
-    document.getElementById('pickupTime').style.borderColor = '';
-    document.getElementById('pickupTime').style.boxShadow = '';
-
+    
+    if (!time) {
+      alert('Please select a pickup time.');
+      document.getElementById('pickupTime').focus();
+      return false;
+    }
+    
     return true;
   }
 
@@ -3288,7 +3221,6 @@ Thank you for considering DM.Me.Bakery!`;
       showMessagingChoice();
   }
 
-
   // ========== ADD THIS COMPLETE MESSAGING CHOICE POPUP ==========
   function showMessagingChoice() {
       console.log('showMessagingChoice called');
@@ -3299,15 +3231,31 @@ Thank you for considering DM.Me.Bakery!`;
           return;
       }
 
-      // Validate date and time using the improved function
-      if (!validateDateTime()) {
+      // Validate date and time
+      const date = document.getElementById('pickupDate').value;
+      const time = document.getElementById('pickupTime').value;
+      
+      if (!date) {
+          alert('Please select a pickup date.');
+          document.getElementById('pickupDate').focus();
           return;
       }
-
-      // Check for same-day conflicts
-      const date = document.getElementById('pickupDate').value;
+      
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
+      if (date < todayStr) {
+          alert('❌ Please select today or a future date for pickup.');
+          document.getElementById('pickupDate').focus();
+          return;
+      }
+      
+      if (!time) {
+          alert('Please select a pickup time.');
+          document.getElementById('pickupTime').focus();
+          return;
+      }
+      
+      // Check for same-day conflicts
       const isToday = date === todayStr;
       const hasSameDayConflict = orderItems.some(item => 
           ['breads', 'cinnamon-rolls', 'cheesecake', 'jeera-biscuits', 'bagels', 'ladi-pav'].includes(item.category)
@@ -3458,6 +3406,7 @@ Thank you for considering DM.Me.Bakery!`;
                   Send via Text Message
               </button>
           </div>
+    
       `;
       
       overlay.appendChild(popup);
@@ -3573,6 +3522,8 @@ Thank you for considering DM.Me.Bakery!`;
       if (popup) popup.remove();
       console.log('Popup closed');
   }
+    
+    
   
   function sendInquiry() {
     const text = getInquiryMessage();
