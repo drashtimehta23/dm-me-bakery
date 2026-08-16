@@ -1608,14 +1608,14 @@
               <span id="selected-category-text" style="color:var(--brown-700); font-weight:500;"></span>
             </div>
 
-            <label for="size">Select your size:</label>
+            <label for="size">Select your size: <span style="color:#c0392b; font-weight:700;">*</span></label>
             <select id="size" onchange="updatePrice()">
               <option value="">— Select a size —</option>
             </select>
 
           <!-- Flavor dropdown for Cakes, Cupcakes -->
           <div id="flavor-container" style="display:none; margin-top:10px;">
-            <label for="flavor">Select your flavor:</label>
+            <label for="flavor">Select your flavor: <span style="color:#c0392b; font-weight:700;">*</span></label>
             <select id="flavor" onchange="updatePrice()">
               <option value="">— Select a flavor —</option>
             </select>
@@ -1691,8 +1691,8 @@
 
         <!-- Date & Time Fields -->
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(61,43,33,0.08);">
-          <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Date</label>
-          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="validateDateInput(); updatePrice(); updateSummary();" min="">          <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Time</label>
+          <label for="pickupDate" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Date <span style="color:#c0392b; font-weight:700;">*</span></label>
+          <input type="date" id="pickupDate" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:20px;cursor:pointer;" onchange="validateDateInput(); updatePrice(); updateSummary();" min="">          <label for="pickupTime" style="display:block;font-weight:600;color:var(--brown-900);margin-bottom:8px;font-family:var(--serif);font-size:1.1rem;">Pickup Time <span style="color:#c0392b; font-weight:700;">*</span></label>
           <input type="time" id="pickupTime" style="width:100%;padding:12px 16px;border-radius:8px;border:1.5px solid rgba(61,43,33,0.15);font-family:var(--sans);font-size:1rem;color:var(--brown-700);background:var(--cream);margin-bottom:5px;cursor:pointer;" onchange="updateSummary()">
         </div>
 
@@ -2011,244 +2011,260 @@
     'ladi-pav': 'Ladi Pav'
   };
 
-  // ========== PRICING HELPER LOGIC ==========
-  const priceData = {
-    'cake': {
-      sizes: [
-        '6 inch (10-12 servings)',
-        '8 inch (20-30 servings)',
-        '10 inch (40-50 servings)',
-        '1/4 sheet (20-30 servings)',
-        '1/2 sheet (40-55 servings)',
-        '2 Tier - 4+6 inch (15-20 servings)',
-        '2 Tier - 6+8 inch (30-40 servings)',
-        '2 Tier - 8+10 inch (60-80 servings)',
-        '3 Tier - 4+6+8 inch (35-50 servings)',
-        '3 Tier - 6+8+10 inch (70-90 servings)',
-        '3 Tier - 8+10+12 inch (90-120 servings)'
-      ],
-      basePrice: 70
-    },
-    'cupcakes': { sizes: ['12 Count', '24 Count'], basePrice: 45 },
-    'breads': { sizes: ['Loaf (8 inch)', 'Baguette', 'Sandwich Bread'], basePrice: 18 },
-    'cinnamon-rolls': { sizes: ['4 Count'], basePrice: 12 },
-    'cheesecake': { sizes: ['6 inch NY Style', '8 inch NY Style'], basePrice: 70 },
-    'jeera-biscuits': { sizes: ['4 Count'], basePrice: 12 },
-    'cake-cups': { sizes: ['6 Count', '12 Count', '24 Count'], basePrice: 4 },
-    'bagels': { sizes: ['6 Count'], basePrice: 18 },
-    'ladi-pav': { sizes: ['12 Count'], basePrice: 10 }
-  };
+// ========== PRICING HELPER LOGIC ==========
+const priceData = {
+  'cake': {
+    sizes: [
+      '6 inch (10-12 servings)',
+      '8 inch (20-30 servings)',
+      '10 inch (40-50 servings)',
+      '1/4 sheet (20-30 servings)',
+      '1/2 sheet (40-55 servings)',
+      '2 Tier - 4+6 inch (15-20 servings)',
+      '2 Tier - 6+8 inch (30-40 servings)',
+      '2 Tier - 8+10 inch (60-80 servings)',
+      '3 Tier - 4+6+8 inch (35-50 servings)',
+      '3 Tier - 6+8+10 inch (70-90 servings)',
+      '3 Tier - 8+10+12 inch (90-120 servings)'
+    ],
+    basePrice: 70
+  },
+  'cupcakes': { sizes: ['12 Count', '24 Count'], basePrice: 45 },
+  'breads': { sizes: ['Loaf (8 inch)', 'Baguette', 'Sandwich Bread'], basePrice: 18 },
+  'cinnamon-rolls': { sizes: ['4 Count'], basePrice: 12 },
+  'cheesecake': { sizes: ['6 inch NY Style', '8 inch NY Style'], basePrice: 70 },
+  'jeera-biscuits': { sizes: ['4 Count'], basePrice: 12 },
+  'cake-cups': { sizes: ['6 Count', '12 Count', '24 Count'], basePrice: 4 },
+  'bagels': { sizes: ['6 Count'], basePrice: 18 },
+  'ladi-pav': { sizes: ['12 Count'], basePrice: 10 }
+};
 
-  const allFlavors = [
-    'Vanilla', 'Chocolate', 'Strawberry', 'Pineapple', 'Lemon', 'Funfetti', 'Red Velvet',
-    'Black Forest', 'Mango', 'Berry Chantilly', 'Cookies and Cream', 'Biscoff',
-    'Ras Malai', 'Gulab Jamun', 'Badam Pista', 'Pistachio', 'Saffron (Kesar)', 'Almond',
-    'Rose', 'Carrot', 'Tiramisu', 'Tres Leches'
-  ];
+const allFlavors = [
+  'Vanilla', 'Chocolate', 'Strawberry', 'Pineapple', 'Lemon', 'Funfetti', 'Red Velvet',
+  'Black Forest', 'Mango', 'Berry Chantilly', 'Cookies and Cream', 'Biscoff',
+  'Ras Malai', 'Gulab Jamun', 'Badam Pista', 'Pistachio', 'Saffron (Kesar)', 'Almond',
+  'Rose', 'Carrot', 'Tiramisu', 'Tres Leches'
+];
 
-  const breadFlavors = {
-    'Loaf (8 inch)': 'Jalapeño Cheese',
-    'Baguette': 'Jalapeño Cheddar, Jalapeño, White, Wheat',
-    'Sandwich Bread': 'Jalapeño Cheddar, Jalapeño, White, Wheat'
-  };
+const breadFlavors = {
+  'Loaf (8 inch)': 'Jalapeño Cheese',
+  'Baguette': 'Jalapeño Cheddar, Jalapeño, White, Wheat',
+  'Sandwich Bread': 'Jalapeño Cheddar, Jalapeño, White, Wheat'
+};
 
-  const bagelFlavors = {
-    '6 Count': 'Jalapeño Cheddar, Jalapeño, Plain, Everything, Cinnamon'
-  };
+const bagelFlavors = {
+  '6 Count': 'Jalapeño Cheddar, Jalapeño, Plain, Everything, Cinnamon'
+};
 
-  let currentSelection = {};
+let currentSelection = {};
 
-  function updateSteps() {
-    const category = document.getElementById('category').value;
-    const stepDetails = document.getElementById('step-details');
-    const sizeSelect = document.getElementById('size');
-    const flavorContainer = document.getElementById('flavor-container');
-    const flavorSelect = document.getElementById('flavor');
-    const breadFlavorDisplay = document.getElementById('bread-flavor-display');
-    const breadFlavorText = document.getElementById('bread-flavor-text');
-    const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
-    const bagelFlavorText = document.getElementById('bagel-flavor-text');
-    const tierMessage = document.getElementById('tier-message');
-    const cakeAddons = document.getElementById('cake-addons');
-    const cupcakeAddons = document.getElementById('cupcake-addons');
-    const summaryBox = document.getElementById('summaryBox');
-    const selectedCategoryText = document.getElementById('selected-category-text');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const orderItemsList = document.getElementById('orderItemsList');
+function updateSteps() {
+  const category = document.getElementById('category').value;
+  const stepDetails = document.getElementById('step-details');
+  const sizeSelect = document.getElementById('size');
+  const flavorContainer = document.getElementById('flavor-container');
+  const flavorSelect = document.getElementById('flavor');
+  const breadFlavorDisplay = document.getElementById('bread-flavor-display');
+  const breadFlavorText = document.getElementById('bread-flavor-text');
+  const bagelFlavorDisplay = document.getElementById('bagel-flavor-display');
+  const bagelFlavorText = document.getElementById('bagel-flavor-text');
+  const tierMessage = document.getElementById('tier-message');
+  const cakeAddons = document.getElementById('cake-addons');
+  const cupcakeAddons = document.getElementById('cupcake-addons');
+  const summaryBox = document.getElementById('summaryBox');
+  const selectedCategoryText = document.getElementById('selected-category-text');
+  const addItemBtn = document.getElementById('addItemBtn');
+  const orderItemsList = document.getElementById('orderItemsList');
 
-    // Hide all dynamic sections
-    flavorContainer.style.display = 'none';
-    breadFlavorDisplay.style.display = 'none';
-    bagelFlavorDisplay.style.display = 'none';
-    tierMessage.style.display = 'none';
-    cakeAddons.style.display = 'none';
-    cupcakeAddons.style.display = 'none';
+  // Hide all dynamic sections
+  flavorContainer.style.display = 'none';
+  breadFlavorDisplay.style.display = 'none';
+  bagelFlavorDisplay.style.display = 'none';
+  tierMessage.style.display = 'none';
+  cakeAddons.style.display = 'none';
+  cupcakeAddons.style.display = 'none';
 
-    const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
-    const typeContainer = document.getElementById('type-container');
-    if (hideTypeCategories.includes(category)) {
-      typeContainer.style.display = 'none';
-    } else {
-      typeContainer.style.display = 'block';
-    }
+  const hideTypeCategories = ['jeera-biscuits', 'breads', 'cinnamon-rolls', 'cheesecake', 'bagels', 'ladi-pav'];
+  const typeContainer = document.getElementById('type-container');
+  if (hideTypeCategories.includes(category)) {
+    typeContainer.style.display = 'none';
+  } else {
+    typeContainer.style.display = 'block';
+  }
 
-    if (category) {
-      document.getElementById('step-category').classList.remove('active');
-      stepDetails.classList.add('active');
-      selectedCategoryText.textContent = catLabels[category] || category;
+  if (category) {
+    document.getElementById('step-category').classList.remove('active');
+    stepDetails.classList.add('active');
+    selectedCategoryText.textContent = catLabels[category] || category;
 
-      const sizes = priceData[category].sizes;
-      sizeSelect.innerHTML = '<option value="">— Select a size —</option>';
-      sizes.forEach(size => {
+    const sizes = priceData[category].sizes;
+    sizeSelect.innerHTML = '<option value="">— Select a size —</option>';
+    sizes.forEach(size => {
+      const opt = document.createElement('option');
+      opt.value = size;
+      opt.textContent = size;
+      sizeSelect.appendChild(opt);
+    });
+
+    if (category === 'cake' || category === 'cupcakes') {
+      flavorContainer.style.display = 'block';
+      flavorSelect.innerHTML = '<option value="">— Select a flavor —</option>';
+      allFlavors.forEach(flavor => {
         const opt = document.createElement('option');
-        opt.value = size;
-        opt.textContent = size;
-        sizeSelect.appendChild(opt);
+        opt.value = flavor;
+        opt.textContent = flavor;
+        flavorSelect.appendChild(opt);
       });
+    } else if (category === 'breads') {
+      breadFlavorDisplay.style.display = 'block';
+      breadFlavorText.textContent = 'Select a size above to see available flavors.';
+    } else if (category === 'bagels') {
+      bagelFlavorDisplay.style.display = 'block';
+      bagelFlavorText.textContent = 'Select a size above to see available flavors.';
+    }
 
-      if (category === 'cake' || category === 'cupcakes') {
-        flavorContainer.style.display = 'block';
-        flavorSelect.innerHTML = '<option value="">— Select a flavor —</option>';
-        allFlavors.forEach(flavor => {
-          const opt = document.createElement('option');
-          opt.value = flavor;
-          opt.textContent = flavor;
-          flavorSelect.appendChild(opt);
-        });
-      } else if (category === 'breads') {
-        breadFlavorDisplay.style.display = 'block';
-        breadFlavorText.textContent = 'Select a size above to see available flavors.';
-      } else if (category === 'bagels') {
-        bagelFlavorDisplay.style.display = 'block';
-        bagelFlavorText.textContent = 'Select a size above to see available flavors.';
-      }
+    if (category === 'cake') {
+      cakeAddons.style.display = 'block';
+      document.querySelectorAll('#cake-addons input').forEach(cb => cb.checked = false);
+    } else if (category === 'cupcakes') {
+      cupcakeAddons.style.display = 'block';
+      document.querySelectorAll('#cupcake-addons input').forEach(cb => cb.checked = false);
+    }
 
-      if (category === 'cake') {
-        cakeAddons.style.display = 'block';
-        document.querySelectorAll('#cake-addons input').forEach(cb => cb.checked = false);
-      } else if (category === 'cupcakes') {
-        cupcakeAddons.style.display = 'block';
-        document.querySelectorAll('#cupcake-addons input').forEach(cb => cb.checked = false);
-      }
-
-      // Show Add to Order button
-      if (addItemBtn) addItemBtn.style.display = 'inline-flex';
-      if (orderItemsList) orderItemsList.style.display = 'block';
-      
-      updatePrice();
-    } else {
-      document.getElementById('step-category').classList.add('active');
-      stepDetails.classList.remove('active');
-      selectedCategoryText.textContent = '';
-      if (addItemBtn) addItemBtn.style.display = 'none';
-    }
-  }
-
-  function addToOrder() {
-    // Get values from DOM
-    const category = document.getElementById('category').value;
-    const size = document.getElementById('size').value;
-    const flavor = document.getElementById('flavor').value;
-    const typeSelect = document.getElementById('typeSelect');
-    const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+    // Show Add to Order button
+    if (addItemBtn) addItemBtn.style.display = 'inline-flex';
+    if (orderItemsList) orderItemsList.style.display = 'block';
     
-    // Get addons
-    let addons = [];
-    document.querySelectorAll('#cake-addons input:checked, #cupcake-addons input:checked').forEach(cb => {
-      addons.push(cb.value);
-    });
-    
-    // Get price - use the displayed price which includes same-day fee
-    const priceText = document.getElementById('priceOutput').textContent;
-    let price = parseInt(priceText.replace('$', '')) || 0;
-    
-    // Check if tiered
-    const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
-    
-    // Validate selections
-    if (!category) {
-      alert('Please select a category first.');
-      return;
-    }
-    if (!size) {
-      alert('Please select a size.');
-      return;
-    }
-    
-    // ONLY check flavor if NOT tiered AND category is cake or cupcakes
-    if (!isTiered && (category === 'cake' || category === 'cupcakes') && !flavor) {
-      alert('Please select a flavor.');
-      return;
-    }
-    
-    // Build description
-    const catLabels = {
-      'cake': 'Cake',
-      'cupcakes': 'Cupcakes',
-      'breads': 'Bread',
-      'cinnamon-rolls': 'Cinnamon Rolls',
-      'cheesecake': 'Cheesecake',
-      'jeera-biscuits': 'Jeera Biscuits',
-      'cake-cups': 'Cake Cups',
-      'bagels': 'Bagels',
-      'ladi-pav': 'Ladi Pav'
-    };
-    
-    let description = `${catLabels[category] || category} - ${size}`;
-    if (flavor && (category === 'cake' || category === 'cupcakes')) {
-      description += ` (${flavor})`;
-    }
-    if (vegan) description += ' [VEGAN]';
-    if (addons.length) {
-      const addonNames = addons.map(a => a.replace(/-/g, ' '));
-      description += ` + ${addonNames.join(', ')}`;
-    }
-    
-    // If tiered, add a note
-    if (isTiered) {
-      description += ' [Message for quote]';
-    }
-    
-    // Add to order items
-    orderItems.push({
-      category: category,
-      size: size,
-      flavor: flavor,
-      vegan: vegan,
-      addons: addons,
-      price: isTiered ? 'NA' : price, // Set price to 'NA' for tiered
-      description: description,
-      isTiered: isTiered
-    });
-    
-    // Update the order items display
-    renderOrderItems();
-    
-    // Update total price
-    updateTotalPrice();
-    
-    // Reset the current selection
-    document.getElementById('category').value = '';
-    document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
-    document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
-    document.getElementById('flavor-container').style.display = 'none';
-    document.getElementById('bread-flavor-display').style.display = 'none';
-    document.getElementById('bagel-flavor-display').style.display = 'none';
-    document.getElementById('tier-message').style.display = 'none';
-    document.getElementById('cake-addons').style.display = 'none';
-    document.getElementById('cupcake-addons').style.display = 'none';
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    updatePrice();
+  } else {
     document.getElementById('step-category').classList.add('active');
-    document.getElementById('step-details').classList.remove('active');
-    document.getElementById('selected-category-text').textContent = '';
-    document.getElementById('priceOutput').textContent = '$0';
-    document.getElementById('priceLabel').textContent = 'Estimated starting price';
-    document.getElementById('pricingNote').style.display = 'block';
-    document.getElementById('summaryBox').style.display = 'none';
-    
-    // Show the order items list
-    document.getElementById('orderItemsList').style.display = 'block';
+    stepDetails.classList.remove('active');
+    selectedCategoryText.textContent = '';
+    if (addItemBtn) addItemBtn.style.display = 'none';
   }
+}
+
+function addToOrder() {
+  // Get values from DOM
+  const category = document.getElementById('category').value;
+  const size = document.getElementById('size').value;
+  const flavor = document.getElementById('flavor').value;
+  const typeSelect = document.getElementById('typeSelect');
+  const vegan = typeSelect ? typeSelect.value === 'vegan' : false;
+  
+  // Get addons
+  let addons = [];
+  document.querySelectorAll('#cake-addons input:checked, #cupcake-addons input:checked').forEach(cb => {
+    addons.push(cb.value);
+  });
+  
+  // Get price - use the displayed price which includes same-day fee
+  const priceText = document.getElementById('priceOutput').textContent;
+  let price = parseInt(priceText.replace('$', '')) || 0;
+  
+  // Check if tiered
+  const isTiered = category === 'cake' && (size.includes('2 Tier') || size.includes('3 Tier'));
+  
+  // Validate selections - ALL REQUIRED
+  if (!category) {
+    alert('Please select a category first.');
+    return;
+  }
+  if (!size) {
+    alert('Please select a size.');
+    document.getElementById('size').focus();
+    return;
+  }
+  
+  // ONLY check flavor if NOT tiered AND category is cake or cupcakes
+  if (!isTiered && (category === 'cake' || category === 'cupcakes') && !flavor) {
+    alert('Please select a flavor.');
+    document.getElementById('flavor').focus();
+    return;
+  }
+  
+  // Validate date and time
+  const date = document.getElementById('pickupDate').value;
+  const time = document.getElementById('pickupTime').value;
+  if (!date) {
+    alert('Please select a pickup date.');
+    document.getElementById('pickupDate').focus();
+    return;
+  }
+  if (!time) {
+    alert('Please select a pickup time.');
+    document.getElementById('pickupTime').focus();
+    return;
+  }
+  
+  // Build description
+  const catLabels = {
+    'cake': 'Cake',
+    'cupcakes': 'Cupcakes',
+    'breads': 'Bread',
+    'cinnamon-rolls': 'Cinnamon Rolls',
+    'cheesecake': 'Cheesecake',
+    'jeera-biscuits': 'Jeera Biscuits',
+    'cake-cups': 'Cake Cups',
+    'bagels': 'Bagels',
+    'ladi-pav': 'Ladi Pav'
+  };
+  
+  let description = `${catLabels[category] || category} - ${size}`;
+  if (flavor && (category === 'cake' || category === 'cupcakes')) {
+    description += ` (${flavor})`;
+  }
+  if (vegan) description += ' [VEGAN]';
+  if (addons.length) {
+    const addonNames = addons.map(a => a.replace(/-/g, ' '));
+    description += ` + ${addonNames.join(', ')}`;
+  }
+  
+  // If tiered, add a note
+  if (isTiered) {
+    description += ' [Message for quote]';
+  }
+  
+  // Add to order items
+  orderItems.push({
+    category: category,
+    size: size,
+    flavor: flavor,
+    vegan: vegan,
+    addons: addons,
+    price: isTiered ? 'NA' : price, // Set price to 'NA' for tiered
+    description: description,
+    isTiered: isTiered
+  });
+  
+  // Update the order items display
+  renderOrderItems();
+  
+  // Update total price
+  updateTotalPrice();
+  
+  // Reset the current selection
+  document.getElementById('category').value = '';
+  document.getElementById('size').innerHTML = '<option value="">— Select a size —</option>';
+  document.getElementById('flavor').innerHTML = '<option value="">— Select a flavor —</option>';
+  document.getElementById('flavor-container').style.display = 'none';
+  document.getElementById('bread-flavor-display').style.display = 'none';
+  document.getElementById('bagel-flavor-display').style.display = 'none';
+  document.getElementById('tier-message').style.display = 'none';
+  document.getElementById('cake-addons').style.display = 'none';
+  document.getElementById('cupcake-addons').style.display = 'none';
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('step-category').classList.add('active');
+  document.getElementById('step-details').classList.remove('active');
+  document.getElementById('selected-category-text').textContent = '';
+  document.getElementById('priceOutput').textContent = '$0';
+  document.getElementById('priceLabel').textContent = 'Estimated starting price';
+  document.getElementById('pricingNote').style.display = 'block';
+  document.getElementById('summaryBox').style.display = 'none';
+  
+  // Show the order items list
+  document.getElementById('orderItemsList').style.display = 'block';
+}
 
   function renderOrderItems() {
     const container = document.getElementById('orderItemsList');
